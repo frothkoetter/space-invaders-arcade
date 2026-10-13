@@ -1,0 +1,12 @@
+{
+  "event_id": "00000000-0000-4000-8000-000000000001",
+  "event_type": "invader.killed",
+  "occurred_at": 1791806400000,
+  "session_id": "curl-smoke",
+  "player_id": "anon-curl",
+  "player_name": "PILOT",
+  "game_version": "flag-edition-v17-epoch-millis-ts",
+  "level": 1,
+  "frame": 100,
+  "data_json": "{\"pointsAwarded\":10}"
+}

@@ -1,0 +1,96 @@
+{
+  "namespace": "example.avro",
+  "type": "record",
+  "name": "space_invaders_event_wire",
+  "doc": "Browser/curl JSON (camelCase) with nested data struct. JsonTreeReader on ListenHTTP before UpdateRecord/Jolt.",
+  "fields": [
+    {"name": "eventId", "type": "string"},
+    {"name": "eventType", "type": "string"},
+    {"name": "occurredAt", "type": {"type": "string", "logicalType": "timestamp-millis"}},
+    {"name": "sessionId", "type": "string"},
+    {"name": "playerId", "type": "string"},
+    {"name": "playerName", "type": "string"},
+    {"name": "gameVersion", "type": "string"},
+    {"name": "level", "type": "int"},
+    {"name": "frame", "type": "long"},
+    {
+      "name": "data",
+      "type": ["null", {
+        "type": "record",
+        "name": "space_invaders_event_data",
+        "fields": [
+          {"name": "pointsAwarded", "type": ["null", "int"], "default": null},
+          {"name": "invaderRow", "type": ["null", "int"], "default": null},
+          {"name": "invaderCol", "type": ["null", "int"], "default": null},
+          {"name": "flag", "type": ["null", "string"], "default": null},
+          {"name": "remainingInvaders", "type": ["null", "int"], "default": null},
+          {"name": "previousScore", "type": ["null", "int"], "default": null},
+          {"name": "newScore", "type": ["null", "int"], "default": null},
+          {"name": "delta", "type": ["null", "int"], "default": null},
+          {"name": "reason", "type": ["null", "string"], "default": null},
+          {"name": "previousLives", "type": ["null", "int"], "default": null},
+          {"name": "newLives", "type": ["null", "int"], "default": null},
+          {"name": "livesRemainingAfter", "type": ["null", "int"], "default": null},
+          {"name": "cause", "type": ["null", "string"], "default": null},
+          {"name": "gameOver", "type": ["null", "boolean"], "default": null},
+          {"name": "completedLevel", "type": ["null", "int"], "default": null},
+          {"name": "nextLevel", "type": ["null", "int"], "default": null},
+          {"name": "scoreAtCompletion", "type": ["null", "int"], "default": null},
+          {"name": "livesRemaining", "type": ["null", "int"], "default": null},
+          {"name": "durationMs", "type": ["null", "long"], "default": null},
+          {"name": "bunkerIndex", "type": ["null", "int"], "default": null},
+          {"name": "pixelsDestroyed", "type": ["null", "int"], "default": null},
+          {
+            "name": "position",
+            "type": ["null", {
+              "type": "record",
+              "name": "xy_position",
+              "fields": [
+                {"name": "x", "type": "double"},
+                {"name": "y", "type": "double"}
+              ]
+            }],
+            "default": null
+          },
+          {
+            "name": "bunkerPosition",
+            "type": ["null", {
+              "type": "record",
+              "name": "xy_bunker",
+              "fields": [
+                {"name": "x", "type": "double"},
+                {"name": "y", "type": "double"}
+              ]
+            }],
+            "default": null
+          },
+          {
+            "name": "bulletPosition",
+            "type": ["null", {
+              "type": "record",
+              "name": "xy_bullet",
+              "fields": [
+                {"name": "x", "type": "double"},
+                {"name": "y", "type": "double"}
+              ]
+            }],
+            "default": null
+          },
+          {
+            "name": "pixelHit",
+            "type": ["null", {
+              "type": "record",
+              "name": "pixel_cell",
+              "fields": [
+                {"name": "row", "type": "int"},
+                {"name": "col", "type": "int"}
+              ]
+            }],
+            "default": null
+          }
+        ]
+      }],
+      "default": null
+    }
+  ]
+}

@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Space Invaders — Flag Edition</title>
+  <!-- build: flag-edition-v20-init-order-fix -->
+  <!-- CDP ingest example (localStorage si-nifi-listen-url): http://projtriton.inbound.dfx.hahgzjod.a465-9q4k.cloudera.site:9088/space-invaders (9088 is HTTP, not HTTPS) -->
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html {
+      touch-action: manipulation;
+      -webkit-text-size-adjust: 100%;
+    }
+    body {
+      background: #0a0a12;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      min-height: 100dvh;
+      height: 100%;
+      overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: none;
+      font-family: "Courier New", monospace;
+      color: #39ff14;
+      padding:
+        env(safe-area-inset-top, 0)
+        env(safe-area-inset-right, 0)
+        env(safe-area-inset-bottom, 0)
+        env(safe-area-inset-left, 0);
+    }
+    #app {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 100vw;
+      height: 100%;
+      min-height: 0;
+      padding: 0.5rem;
+    }
+    h1 {
+      font-size: clamp(0.9rem, 4vw, 1.4rem);
+      letter-spacing: 0.2em;
+      margin-bottom: 0.35rem;
+      text-shadow: 0 0 8px #39ff14;
+      flex-shrink: 0;
+    }
+    #game-container {
+      position: relative;
+      border: 3px solid #39ff14;
+      box-shadow: 0 0 20px rgba(57, 255, 20, 0.3);
+      flex: 1 1 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: min(55vh, 600px);
+      min-width: min(92vw, 800px);
+      max-width: 100%;
+      max-height: 100%;
+    }
+    canvas {
+      display: block;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      background: #000;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .hud {
+      margin-top: 0.5rem;
+      font-size: clamp(0.65rem, 2.5vw, 0.85rem);
+      letter-spacing: 0.08em;
+      opacity: 0.8;
+      flex-shrink: 0;
+      text-align: center;
+      padding: 0 0.5rem;
+    }
+    .hud-mobile { display: none; }
+    #touch-controls {
+      display: none;
+      width: 100%;
+      max-width: 480px;
+      flex-shrink: 0;
+      gap: 0.75rem;
+      padding: 0.5rem 0.25rem 0;
+      align-items: stretch;
+      justify-content: center;
+      touch-action: manipulation;
+    }
+    #touch-controls.visible {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+    .touch-btn {
+      appearance: none;
+      border: 2px solid #39ff14;
+      background: rgba(57, 255, 20, 0.08);
+      color: #39ff14;
+      font-family: inherit;
+      font-size: 1.1rem;
+      font-weight: bold;
+      letter-spacing: 0.05em;
+      border-radius: 8px;
+      min-height: 56px;
+      padding: 0.75rem;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      cursor: pointer;
+    }
+    .touch-btn:active,
+    .touch-btn.active {
+      background: rgba(57, 255, 20, 0.28);
+      box-shadow: 0 0 12px rgba(57, 255, 20, 0.45);
+    }
+    #btn-fire {
+      font-size: 0.95rem;
+    }
+    @media (hover: none) and (pointer: coarse) {
+      #app { justify-content: flex-start; padding-top: max(0.5rem, env(safe-area-inset-top, 0)); }
+      .hud-desktop { display: none; }
+      .hud-mobile { display: block; }
+    }
+    @media (max-height: 500px) and (orientation: landscape) {
+      h1 { display: none; }
+      .hud { display: none; }
+      #touch-controls.visible { padding-top: 0.25rem; }
+      .touch-btn { min-height: 48px; font-size: 0.95rem; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>SPACE INVADERS</h1>
+    <div id="game-container">
+      <canvas id="game" width="800" height="600"></canvas>
+    </div>
+    <div id="touch-controls" aria-label="Touch controls">
+      <button type="button" class="touch-btn" id="btn-left" aria-label="Move left">◀</button>
+      <button type="button" class="touch-btn" id="btn-fire" aria-label="Fire">FIRE</button>
+      <button type="button" class="touch-btn" id="btn-right" aria-label="Move right">▶</button>
+    </div>
+    <p class="hud hud-desktop">ARROWS / WASD — MOVE &nbsp;|&nbsp; SPACE — FIRE</p>
+    <p class="hud hud-mobile">◀ ▶ MOVE &nbsp;|&nbsp; FIRE — SHOOT &nbsp;|&nbsp; TAP SCREEN TO START</p>
+    <p id="file-protocol-warn" class="hud" style="display:none;color:#ff8866;max-width:36rem;">
+      Open with a local server, not double-click: <code>python3 -m http.server 8080</code> then
+      <code>http://127.0.0.1:8080/index.html</code>
+    </p>
+  </div>
+
+  <script>
+    if (location.protocol === 'file:') {
+      const fw = document.getElementById('file-protocol-warn');
+      if (fw) fw.style.display = 'block';
+    }
+
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const gameContainer = document.getElementById('game-container');
+    const touchControls = document.getElementById('touch-controls');
+    const W = canvas.width;
+    const H = canvas.height;
+
+    const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+    if (isTouchDevice) touchControls.classList.add('visible');
+
+    function resizeCanvas() {
+      let maxW = gameContainer.clientWidth;
+      let maxH = gameContainer.clientHeight;
+      if (maxW <= 0) maxW = W;
+      if (maxH <= 0) maxH = H;
+      const scale = Math.min(maxW / W, maxH / H, 1);
+      canvas.style.width = Math.floor(W * scale) + 'px';
+      canvas.style.height = Math.floor(H * scale) + 'px';
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 150));
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', resizeCanvas);
+    }
+
+    // Audio (simple beeps via Web Audio API)
+    let audioCtx = null;
+    function beep(freq, duration, type = 'square', vol = 0.08) {
+      if (!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      gain.gain.value = vol;
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      osc.stop(audioCtx.currentTime + duration);
+    }
+
+    // Game state
+    const STATE = { START: 0, PLAYING: 1, GAMEOVER: 2, WIN: 3 };
+    let state = STATE.START;
+    let score = 0;
+    const START_LIVES = 10;
+    let lives = START_LIVES;
+    let level = 1;
+    let frame = 0;
+
+    // --- Event streaming (console mock + NiFi ListenHTTP POST + optional legacy TCP) ---
+    const GAME_VERSION = 'flag-edition-v20-init-order-fix';
+    const TCP_SOCKET_SUPPORTED = 'TCPSocket' in globalThis;
+    const DEFAULT_NIFI_LISTEN_URL = 'http://127.0.0.1:9998/space-invaders';
+
+    const LS_KEYS = {
+      events: 'si-events',
+      nifi: 'si-nifi',
+      nifiListenUrl: 'si-nifi-listen-url',
+      nifiMode: 'si-nifi-mode',
+      tcp: 'si-tcp',
+      tcpHost: 'si-tcp-host',
+      tcpPort: 'si-tcp-port',
+      playerName: 'si-player-name'
+    };
+
+    /** @typedef {'simple' | 'cors'} NifiPostMode */
+
+    function applyQueryConfigOnce() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('events') === '1') localStorage.setItem(LS_KEYS.events, '1');
+        if (params.get('nifi') === '1') localStorage.setItem(LS_KEYS.nifi, '1');
+        const nifiUrl = params.get('nifi-url');
+        if (nifiUrl) localStorage.setItem(LS_KEYS.nifiListenUrl, nifiUrl);
+        const nifiMode = params.get('nifi-mode');
+        if (nifiMode === 'simple' || nifiMode === 'cors') {
+          localStorage.setItem(LS_KEYS.nifiMode, nifiMode);
+        }
+        if (params.get('tcp') === '1') localStorage.setItem(LS_KEYS.tcp, '1');
+        const host = params.get('tcp-host');
+        if (host) localStorage.setItem(LS_KEYS.tcpHost, host);
+        const port = params.get('tcp-port');
+        if (port) localStorage.setItem(LS_KEYS.tcpPort, port);
+      } catch (_) { /* ignore */ }
+    }
+    applyQueryConfigOnce();
+
+    function isEventsEnabled() {
+      try {
+        if (new URLSearchParams(window.location.search).get('events') === '1') return true;
+        return localStorage.getItem(LS_KEYS.events) === '1';
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function isNifiEnabled() {
+      try {
+        if (new URLSearchParams(window.location.search).get('nifi') === '1') return true;
+        return localStorage.getItem(LS_KEYS.nifi) === '1';
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function getNifiListenUrl() {
+      try {
+        return localStorage.getItem(LS_KEYS.nifiListenUrl) || DEFAULT_NIFI_LISTEN_URL;
+      } catch (_) {
+        return DEFAULT_NIFI_LISTEN_URL;
+      }
+    }
+
+    /** Default simple (text/plain, no preflight); use nifi-mode=cors for application/json. */
+    function getNifiPostMode() {
+      try {
+        const fromQuery = new URLSearchParams(window.location.search).get('nifi-mode');
+        if (fromQuery === 'simple' || fromQuery === 'cors') return fromQuery;
+        const stored = localStorage.getItem(LS_KEYS.nifiMode);
+        if (stored === 'simple' || stored === 'cors') return stored;
+      } catch (_) { /* ignore */ }
+      return 'simple';
+    }
+
+    function isNifiCrossOrigin() {
+      try {
+        const target = new URL(getNifiListenUrl(), window.location.href);
+        return target.origin !== window.location.origin;
+      } catch (_) {
+        return true;
+      }
+    }
+
+    function getLocalNifiProxyIngestUrl() {
+      try {
+        const origin = window.location.origin;
+        if (origin.startsWith('http://127.0.0.1:') || origin.startsWith('http://localhost:')) {
+          return origin + '/space-invaders';
+        }
+      } catch (_) { /* ignore */ }
+      return 'http://127.0.0.1:8080/space-invaders';
+    }
+
+    function isTcpEnabled() {
+      try {
+        if (new URLSearchParams(window.location.search).get('tcp') === '1') return true;
+        return localStorage.getItem(LS_KEYS.tcp) === '1';
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function getTcpHost() {
+      try {
+        return localStorage.getItem(LS_KEYS.tcpHost) || '127.0.0.1';
+      } catch (_) {
+        return '127.0.0.1';
+      }
+    }
+
+    function getTcpPort() {
+      try {
+        const raw = localStorage.getItem(LS_KEYS.tcpPort) || '9999';
+        const n = parseInt(raw, 10);
+        return Number.isFinite(n) && n > 0 && n <= 65535 ? n : 9999;
+      } catch (_) {
+        return 9999;
+      }
+    }
+
+    function getTcpTargetDisplay() {
+      return getTcpHost() + ':' + getTcpPort();
+    }
+
+    let tcpUnsupportedWarned = false;
+    function warnTcpUnsupported() {
+      if (tcpUnsupportedWarned) return;
+      tcpUnsupportedWarned = true;
+      console.warn(
+        '[tcp] Direct TCP unavailable — this browser has no TCPSocket (Direct Sockets). ' +
+        'Use Chrome 137+ on HTTPS or localhost. Safari and Firefox cannot open raw TCP from a web page.'
+      );
+    }
+
+    const EVENT_STREAM = {
+      enabled: isEventsEnabled(),
+      gameVersion: GAME_VERSION
+    };
+
+    const NIFI_STREAM = {
+      enabled: isNifiEnabled(),
+      flushIntervalMs: 500,
+      batchMax: 50
+    };
+
+    const TCP_STREAM = {
+      enabled: isTcpEnabled(),
+      flushIntervalMs: 500,
+      batchMax: 50,
+      bufferMax: 200
+    };
+
+    function logNifiTransportHint() {
+      if (!NIFI_STREAM.enabled) return;
+      const url = getNifiListenUrl();
+      const mode = getNifiPostMode();
+      const cross = isNifiCrossOrigin();
+      if (mode === 'simple') {
+        console.info(
+          '[nifi] mode=simple (Content-Type: text/plain;charset=UTF-8, JSON body; skips OPTIONS preflight)',
+          '→', url,
+          cross ? '(cross-origin; opaque no-cors response — POST still sent)' : '(same-origin)'
+        );
+        if (cross) {
+          console.info(
+            '[nifi] If POST still fails, use same-origin proxy:',
+            getLocalNifiProxyIngestUrl(),
+            '— see docs/space-invaders/nifi-browser-cors.md (serve-with-nifi-proxy.py)'
+          );
+        }
+      } else {
+        console.info(
+          '[nifi] mode=cors (Content-Type: application/json; requires NiFi/gateway CORS or preflight will fail)',
+          '→', url
+        );
+        if (cross) {
+          console.info('[nifi] Cross-origin without CORS headers? Proxy ingest URL:', getLocalNifiProxyIngestUrl());
+        }
+      }
+    }
+    logNifiTransportHint();
+
+    function logTcpTransportHint() {
+      if (!TCP_STREAM.enabled) return;
+      if (!TCP_SOCKET_SUPPORTED) {
+        warnTcpUnsupported();
+        return;
+      }
+      console.info('[tcp] legacy TCPSocket →', getTcpTargetDisplay(), '(JSON lines; enable si-tcp=1 only)');
+    }
+    logTcpTransportHint();
+
+    let sessionId = null;
+    let levelStartTime = null;
+    let nifiQueue = [];
+    let nifiFlushTimer = null;
+    let nifiFlushInFlight = false;
+    let tcpQueue = [];
+    let tcpFlushTimer = null;
+    let tcpFlushInFlight = false;
+    const tcpTextEncoder = new TextEncoder();
+    const tcpConn = { socket: null, writer: null, opening: null };
+
+    function getOrCreatePlayerId() {
+      try {
+        let id = localStorage.getItem('si-player-id');
+        if (!id) {
+          id = 'anon-' + crypto.randomUUID().slice(0, 8);
+          localStorage.setItem('si-player-id', id);
+        }
+        return id;
+      } catch (_) {
+        return 'anon-unknown';
+      }
+    }
+
+    function sanitizePlayerName(raw) {
+      const name = String(raw || '').trim().slice(0, 24);
+      return name || 'PILOT';
+    }
+
+    function getPlayerName() {
+      try {
+        return sanitizePlayerName(localStorage.getItem(LS_KEYS.playerName));
+      } catch (_) {
+        return 'PILOT';
+      }
+    }
+
+    function setPlayerName(name) {
+      const clean = sanitizePlayerName(name);
+      try {
+        localStorage.setItem(LS_KEYS.playerName, clean);
+      } catch (_) { /* ignore */ }
+      return clean;
+    }
+
+    function promptForPlayerName(message) {
+      const current = getPlayerName();
+      const entered = window.prompt(message || 'Enter your pilot name:', current === 'PILOT' && !localStorage.getItem(LS_KEYS.playerName) ? '' : current);
+      if (entered === null) return current;
+      return setPlayerName(entered);
+    }
+
+    let playerName = getPlayerName();
+
+    /** Intro pilot label — top of play area (below HUD band; no overlap with center title). */
+    const START_PLAYER_NAME_Y = 46;
+    const START_PLAYER_NAME_HINT_Y = START_PLAYER_NAME_Y + 16;
+
+    function maybePromptPlayerNameOnFirstVisit() {
+      try {
+        if (!localStorage.getItem(LS_KEYS.playerName)) {
+          playerName = promptForPlayerName('Welcome! Enter your pilot name:');
+        }
+      } catch (_) { /* private mode — keep PILOT */ }
+    }
+
+    function isClickOnPlayerName(clientY) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleY = H / rect.height;
+      const canvasY = (clientY - rect.top) * scaleY;
+      return canvasY >= START_PLAYER_NAME_Y - 26 && canvasY <= START_PLAYER_NAME_HINT_Y + 8;
+    }
+
+    function editPlayerNameOnIntro() {
+      playerName = promptForPlayerName('Change pilot name:');
+    }
+
+    const EVENT_COLORS = {
+      'invader.killed': '#39ff14',
+      'score.changed': '#ffaa00',
+      'player.destroyed': '#ff4466',
+      'lives.changed': '#3399FF',
+      'level.completed': '#8800ff',
+      'bunker.friendly_fire': '#FDDA24'
+    };
+
+    function logGameEvent(event) {
+      const color = EVENT_COLORS[event.event_type] || '#39ff14';
+      console.groupCollapsed(`%c[game-event] ${event.event_type}`, `color: ${color}; font-weight: bold;`);
+      console.log(JSON.stringify(event, null, 2));
+      console.groupEnd();
+    }
+
+    async function resetTcpConnection() {
+      try {
+        if (tcpConn.writer) {
+          try { tcpConn.writer.releaseLock(); } catch (_) { /* ignore */ }
+        }
+        if (tcpConn.socket) {
+          try { tcpConn.socket.close(); } catch (_) { /* ignore */ }
+        }
+      } catch (_) { /* ignore */ }
+      tcpConn.socket = null;
+      tcpConn.writer = null;
+      tcpConn.opening = null;
+    }
+
+    async function getTcpWriter() {
+      if (!TCP_SOCKET_SUPPORTED) return null;
+      if (tcpConn.writer) return tcpConn.writer;
+      if (tcpConn.opening) return tcpConn.opening;
+      const host = getTcpHost();
+      const port = getTcpPort();
+      tcpConn.opening = (async () => {
+        try {
+          const socket = new TCPSocket(host, port, { keepAlive: true });
+          const { writable } = await socket.opened;
+          tcpConn.socket = socket;
+          tcpConn.writer = writable.getWriter();
+          return tcpConn.writer;
+        } catch (err) {
+          await resetTcpConnection();
+          throw err;
+        } finally {
+          tcpConn.opening = null;
+        }
+      })();
+      return tcpConn.opening;
+    }
+
+    async function writeTcpEvents(events) {
+      if (!events.length) return;
+      if (!TCP_SOCKET_SUPPORTED) {
+        warnTcpUnsupported();
+        return;
+      }
+      try {
+        const writer = await getTcpWriter();
+        const payload = events.map((e) => JSON.stringify(e) + '\n').join('');
+        await writer.write(tcpTextEncoder.encode(payload));
+      } catch (err) {
+        console.warn('[tcp] write failed (' + getTcpTargetDisplay() + ')', err);
+        await resetTcpConnection();
+      }
+    }
+
+    function nifiPostBody(events) {
+      return events.length === 1 ? events[0] : events;
+    }
+
+    function buildNifiRequestInit(body, useKeepalive) {
+      const mode = getNifiPostMode();
+      if (mode === 'cors') {
+        return {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body,
+          keepalive: !!useKeepalive
+        };
+      }
+      const init = {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+        body,
+        keepalive: !!useKeepalive
+      };
+      if (isNifiCrossOrigin()) init.mode = 'no-cors';
+      return init;
+    }
+
+    function nifiPostFailedHint() {
+      const proxy = getLocalNifiProxyIngestUrl();
+      console.warn(
+        '[nifi] POST failed — try proxy ingest URL', proxy,
+        '(python3 serve-with-nifi-proxy.py) or nifi-mode=cors after NiFi adds CORS; see nifi-browser-cors.md'
+      );
+    }
+
+    function postNifiEventsViaBeacon(url, body) {
+      if (typeof navigator.sendBeacon !== 'function') return false;
+      try {
+        const blob = new Blob([body], { type: 'text/plain;charset=UTF-8' });
+        return navigator.sendBeacon(url, blob);
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function postNifiEvents(events, useKeepalive) {
+      if (!events.length) return;
+      const url = getNifiListenUrl();
+      const body = JSON.stringify(nifiPostBody(events));
+      const mode = getNifiPostMode();
+      const init = buildNifiRequestInit(body, useKeepalive);
+
+      fetch(url, init)
+        .then((res) => {
+          if (init.mode === 'no-cors') {
+            if (EVENT_STREAM.enabled) console.debug('[nifi] POST sent (no-cors opaque)', url);
+            return;
+          }
+          if (!res.ok) console.warn('[nifi] POST HTTP', res.status, url);
+          else if (EVENT_STREAM.enabled) console.debug('[nifi] POST ok', res.status, url);
+        })
+        .catch((err) => {
+          console.warn('[nifi] POST fetch failed (' + url + ')', err);
+          if (useKeepalive && mode === 'simple') {
+            if (postNifiEventsViaBeacon(url, body)) {
+              console.info('[nifi] unload batch sent via sendBeacon (text/plain JSON body)');
+              return;
+            }
+          }
+          nifiPostFailedHint();
+        });
+    }
+
+    function scheduleNifiFlush() {
+      if (!NIFI_STREAM.enabled) return;
+      if (nifiFlushTimer) return;
+      nifiFlushTimer = setTimeout(flushNifiQueue, NIFI_STREAM.flushIntervalMs);
+      if (nifiQueue.length >= NIFI_STREAM.batchMax) flushNifiQueue();
+    }
+
+    function flushNifiQueue() {
+      nifiFlushTimer = null;
+      if (!NIFI_STREAM.enabled || nifiQueue.length === 0 || nifiFlushInFlight) return;
+      const batch = nifiQueue.splice(0, NIFI_STREAM.batchMax);
+      nifiFlushInFlight = true;
+      postNifiEvents(batch, false);
+      nifiFlushInFlight = false;
+      if (nifiQueue.length > 0) scheduleNifiFlush();
+    }
+
+    function enqueueNifiEvent(event) {
+      if (!NIFI_STREAM.enabled) return;
+      nifiQueue.push(event);
+      scheduleNifiFlush();
+    }
+
+    function flushNifiOnUnload() {
+      if (!NIFI_STREAM.enabled || nifiQueue.length === 0) return;
+      const batch = nifiQueue.splice(0, NIFI_STREAM.batchMax);
+      postNifiEvents(batch, true);
+    }
+
+    window.addEventListener('pagehide', flushNifiOnUnload);
+    window.addEventListener('beforeunload', flushNifiOnUnload);
+
+    function scheduleTcpFlush() {
+      if (!TCP_STREAM.enabled) return;
+      if (tcpFlushTimer) return;
+      tcpFlushTimer = setTimeout(flushTcpQueue, TCP_STREAM.flushIntervalMs);
+      if (tcpQueue.length >= TCP_STREAM.batchMax) flushTcpQueue();
+    }
+
+    function flushTcpQueue() {
+      tcpFlushTimer = null;
+      if (!TCP_STREAM.enabled || tcpQueue.length === 0 || tcpFlushInFlight) return;
+      const batch = tcpQueue.splice(0, TCP_STREAM.batchMax);
+      tcpFlushInFlight = true;
+      writeTcpEvents(batch)
+        .finally(() => {
+          tcpFlushInFlight = false;
+          if (tcpQueue.length > 0) scheduleTcpFlush();
+        });
+    }
+
+    function enqueueTcpEvent(event) {
+      if (!TCP_STREAM.enabled) return;
+      tcpQueue.push(event);
+      scheduleTcpFlush();
+    }
+
+    function flushTcpOnUnload() {
+      if (!TCP_STREAM.enabled || tcpQueue.length === 0) return;
+      const batch = tcpQueue.splice(0, TCP_STREAM.batchMax);
+      writeTcpEvents(batch);
+    }
+
+    window.addEventListener('pagehide', flushTcpOnUnload);
+    window.addEventListener('beforeunload', flushTcpOnUnload);
+
+    function publishGameEvent(eventType, data) {
+      if (!EVENT_STREAM.enabled && !NIFI_STREAM.enabled && !TCP_STREAM.enabled) return;
+      try {
+        const event = {
+          event_id: crypto.randomUUID(),
+          event_type: eventType,
+          occurred_at: Date.now(),
+          session_id: sessionId || 'unknown',
+          player_id: getOrCreatePlayerId(),
+          player_name: getPlayerName(),
+          game_version: EVENT_STREAM.gameVersion,
+          level,
+          frame,
+          data_json: JSON.stringify(data != null ? data : {})
+        };
+
+        if (EVENT_STREAM.enabled) logGameEvent(event);
+        enqueueNifiEvent(event);
+        enqueueTcpEvent(event);
+      } catch (_) {
+        // fire-and-forget — never throw into game loop
+      }
+    }
+
+    // Input
+    const keys = {};
+    const touchInput = { left: false, right: false, fire: false };
+
+    document.addEventListener('keydown', e => {
+      keys[e.code] = true;
+      if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
+      if (state === STATE.START && (e.code === 'Space' || e.code === 'Enter')) startGame();
+      if ((state === STATE.GAMEOVER || state === STATE.WIN) && (e.code === 'Space' || e.code === 'Enter')) restartGame();
+    });
+    document.addEventListener('keyup', e => { keys[e.code] = false; });
+
+    function bindTouchButton(btn, key) {
+      const set = (active) => { touchInput[key] = active; btn.classList.toggle('active', active); };
+      const onStart = (e) => {
+        e.preventDefault();
+        set(true);
+        if (!audioCtx && (state === STATE.PLAYING || state === STATE.START)) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      };
+      const onEnd = (e) => { e.preventDefault(); set(false); };
+      btn.addEventListener('touchstart', onStart, { passive: false });
+      btn.addEventListener('touchend', onEnd, { passive: false });
+      btn.addEventListener('touchcancel', onEnd, { passive: false });
+      btn.addEventListener('mousedown', onStart);
+      btn.addEventListener('mouseup', onEnd);
+      btn.addEventListener('mouseleave', onEnd);
+    }
+    bindTouchButton(document.getElementById('btn-left'), 'left');
+    bindTouchButton(document.getElementById('btn-right'), 'right');
+    bindTouchButton(document.getElementById('btn-fire'), 'fire');
+
+    function handleScreenTap(clientY) {
+      if (state === STATE.START) {
+        if (clientY != null && isClickOnPlayerName(clientY)) {
+          editPlayerNameOnIntro();
+          return;
+        }
+        startGame();
+      } else if (state === STATE.GAMEOVER || state === STATE.WIN) restartGame();
+    }
+    canvas.addEventListener('click', (e) => {
+      if (state !== STATE.PLAYING) handleScreenTap(e.clientY);
+    });
+    canvas.addEventListener('touchend', (e) => {
+      if (state !== STATE.PLAYING) {
+        e.preventDefault();
+        const touch = e.changedTouches && e.changedTouches[0];
+        handleScreenTap(touch ? touch.clientY : null);
+      }
+    }, { passive: false });
+
+    document.addEventListener('touchmove', (e) => {
+      if (e.target === canvas || e.target.closest('#touch-controls')) e.preventDefault();
+    }, { passive: false });
+
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', (e) => {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) e.preventDefault();
+      lastTouchEnd = now;
+    }, { passive: false });
+
+    // Player
+    const player = {
+      x: W / 2, y: H - 50, w: 36, h: 20, speed: 5, cooldown: 0
+    };
+
+    // Bullets
+    let playerBullets = [];
+    let invaderBullets = [];
+
+    // Invaders
+    let invaders = [];
+    let invaderDir = 1;
+    let invaderStepDown = false;
+    let invaderMoveTimer = 0;
+    let invaderShootTimer = 0;
+    const INVADER_ROWS = 5;
+    const INVADER_COLS = 11;
+    const BELGIUM = { black: '#000000', yellow: '#FDDA24', red: '#EF3340' };
+    const AUSTRIA = { red: '#ED2939', white: '#FFFFFF' };
+    const US = { red: '#B22234', white: '#FFFFFF', blue: '#3C3B6E' };
+    const PLAYER_BLUE = '#3399FF';
+    const INVADER_OUTLINE = '#2266CC';
+    const FLAG_TYPES = ['austria', 'belgium', 'us'];
+
+    function getInvaderFlag(row, col) {
+      if (col < 4) return 'austria';
+      if (col < 8) return 'belgium';
+      return 'us';
+    }
+    const INVADER_TYPES = [
+      { points: 30, w: 32, h: 24 },
+      { points: 20, w: 32, h: 24 },
+      { points: 20, w: 32, h: 24 },
+      { points: 10, w: 32, h: 24 },
+      { points: 10, w: 32, h: 24 },
+    ];
+
+    // Bunkers
+    let bunkers = [];
+    const BUNKER_W = 70;
+    const BUNKER_H = 48;
+
+    function createBunkerPixelMap() {
+      const cols = 14, rows = 10;
+      const map = [];
+      for (let r = 0; r < rows; r++) {
+        map[r] = [];
+        for (let c = 0; c < cols; c++) {
+          let solid = true;
+          if (r >= 6 && (c < 2 || c >= cols - 2)) solid = false;
+          if (r >= 8 && (c < 4 || c >= cols - 4)) solid = false;
+          map[r][c] = solid ? 1 : 0;
+        }
+      }
+      return map;
+    }
+
+    function initBunkers() {
+      bunkers = [];
+      const spacing = W / 5;
+      for (let i = 0; i < 4; i++) {
+        bunkers.push({
+          x: spacing * (i + 1) - BUNKER_W / 2,
+          y: H - 130,
+          w: BUNKER_W,
+          h: BUNKER_H,
+          pixels: createBunkerPixelMap()
+        });
+      }
+    }
+
+    function initInvaders() {
+      invaders = [];
+      const startX = 80;
+      const startY = 70;
+      const gapX = 48;
+      const gapY = 40;
+      for (let row = 0; row < INVADER_ROWS; row++) {
+        for (let col = 0; col < INVADER_COLS; col++) {
+          const type = INVADER_TYPES[row];
+          invaders.push({
+            x: startX + col * gapX,
+            y: startY + row * gapY,
+            w: type.w,
+            h: type.h,
+            row,
+            col,
+            type,
+            flag: getInvaderFlag(row, col),
+            alive: true,
+            animFrame: 0
+          });
+        }
+      }
+      invaderDir = 1;
+      invaderStepDown = false;
+      invaderMoveTimer = 0;
+      invaderShootTimer = 60;
+    }
+
+    function getAliveInvaders() {
+      return invaders.filter(i => i.alive);
+    }
+
+    function getInvaderSpeed() {
+      const alive = getAliveInvaders().length;
+      const base = Math.max(8, 40 - (INVADER_ROWS * INVADER_COLS - alive) * 0.8);
+      return Math.floor(base / (1 + (level - 1) * 0.15));
+    }
+
+    function startGame() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      sessionId = crypto.randomUUID();
+      levelStartTime = Date.now();
+      score = 0;
+      lives = START_LIVES;
+      level = 1;
+      player.x = W / 2;
+      playerBullets = [];
+      invaderBullets = [];
+      initInvaders();
+      initBunkers();
+      state = STATE.PLAYING;
+      frame = 0;
+    }
+
+    function restartGame() {
+      startGame();
+    }
+
+    function nextLevel() {
+      level++;
+      playerBullets = [];
+      invaderBullets = [];
+      initInvaders();
+      initBunkers();
+      invaderShootTimer = 90;
+      beep(880, 0.15);
+      beep(1100, 0.2);
+    }
+
+    function drawHorizontalStripes(x, y, w, h, colors) {
+      const top = y - h / 2;
+      const stripeH = h / colors.length;
+      colors.forEach((color, i) => {
+        ctx.fillStyle = color;
+        ctx.fillRect(x - w / 2, top + i * stripeH, w, stripeH + 0.5);
+      });
+    }
+
+    function drawAustriaFlag(x, y, w, h) {
+      drawHorizontalStripes(x, y, w, h, [AUSTRIA.red, AUSTRIA.white, AUSTRIA.red]);
+    }
+
+    function drawBelgiumFlag(x, y, w, h) {
+      drawHorizontalStripes(x, y, w, h, [BELGIUM.black, BELGIUM.yellow, BELGIUM.red]);
+    }
+
+    function drawUSFlag(x, y, w, h) {
+      const left = x - w / 2;
+      const top = y - h / 2;
+      const stripeCount = 6;
+      const stripeH = h / stripeCount;
+      for (let i = 0; i < stripeCount; i++) {
+        ctx.fillStyle = i % 2 === 0 ? US.red : US.white;
+        ctx.fillRect(left, top + i * stripeH, w, stripeH + 0.5);
+      }
+      const cantonW = w * 0.42;
+      const cantonH = h * 0.55;
+      ctx.fillStyle = US.blue;
+      ctx.fillRect(left, top, cantonW, cantonH);
+      ctx.fillStyle = US.white;
+      [[0.15, 0.14], [0.32, 0.14], [0.24, 0.24], [0.12, 0.34], [0.28, 0.34], [0.20, 0.44]].forEach(([sx, sy]) => {
+        ctx.fillRect(left + cantonW * sx, top + cantonH * sy, 2, 2);
+      });
+    }
+
+    function drawInvaderFlag(inv) {
+      const { x, y, w, h, flag } = inv;
+      if (flag === 'austria') drawAustriaFlag(x, y, w, h);
+      else if (flag === 'belgium') drawBelgiumFlag(x, y, w, h);
+      else drawUSFlag(x, y, w, h);
+    }
+
+    function drawInvaderFace(inv, anim) {
+      const cx = inv.x;
+      const cy = inv.y;
+      const ink = (localY) => {
+        if (inv.flag === 'austria') {
+          return localY >= -4 && localY < 4 ? '#000' : AUSTRIA.white;
+        }
+        if (inv.flag === 'belgium') {
+          return localY < -4 ? BELGIUM.yellow : '#000';
+        }
+        return localY < -4 ? US.white : '#000';
+      };
+      const px = (dx, dy, pw, ph) => {
+        ctx.fillStyle = ink(dy);
+        ctx.fillRect(cx + dx, cy + dy, pw, ph);
+      };
+      if (inv.row === 0) {
+        px(-8, -6, 4, 4);
+        px(4, -6, 4, 4);
+        px(-4, 2, 8, 3);
+        if (anim) { px(-10, 6, 4, 4); px(6, 6, 4, 4); }
+      } else if (inv.row <= 2) {
+        px(-10, -4, 6, 4);
+        px(4, -4, 6, 4);
+        px(-2, 2, 4, 4);
+        if (anim) { px(-12, 0, 4, 6); px(8, 0, 4, 6); }
+      } else {
+        px(-6, -6, 4, 4);
+        px(2, -6, 4, 4);
+        px(-6, 2, 12, 3);
+        if (anim) { px(-8, 6, 3, 3); px(5, 6, 3, 3); }
+      }
+    }
+
+    function drawInvader(inv, frame) {
+      const { x, y, w, h } = inv;
+      const anim = Math.floor(frame / 20) % 2;
+      drawInvaderFlag(inv);
+      drawInvaderFace(inv, anim);
+      ctx.strokeStyle = INVADER_OUTLINE;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x - w / 2 - 0.5, y - h / 2 - 0.5, w + 1, h + 1);
+    }
+
+    function drawPlayer() {
+      const { x, y, w, h } = player;
+      ctx.fillStyle = PLAYER_BLUE;
+      ctx.beginPath();
+      ctx.moveTo(x, y - h/2);
+      ctx.lineTo(x - w/2, y + h/2);
+      ctx.lineTo(x + w/2, y + h/2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillRect(x - 2, y - h/2 - 8, 4, 10);
+    }
+
+    function bunkerPixelColor(row, totalRows) {
+      const band = Math.min(2, Math.floor(row / (totalRows / 3)));
+      return [BELGIUM.black, BELGIUM.red, BELGIUM.yellow][band];
+    }
+
+    function drawBunker(bunker) {
+      const cellW = bunker.w / bunker.pixels[0].length;
+      const cellH = bunker.h / bunker.pixels.length;
+      const rows = bunker.pixels.length;
+      const cols = bunker.pixels[0].length;
+      const isSolid = (r, c) => r >= 0 && r < rows && c >= 0 && c < cols && bunker.pixels[r][c];
+
+      for (let r = 0; r < rows; r++) {
+        ctx.fillStyle = bunkerPixelColor(r, rows);
+        for (let c = 0; c < cols; c++) {
+          if (bunker.pixels[r][c]) {
+            ctx.fillRect(bunker.x + c * cellW, bunker.y + r * cellH, cellW + 0.5, cellH + 0.5);
+          }
+        }
+      }
+
+      ctx.fillStyle = '#fff';
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if (!bunker.pixels[r][c]) continue;
+          const bx = bunker.x + c * cellW;
+          const by = bunker.y + r * cellH;
+          if (!isSolid(r - 1, c)) ctx.fillRect(bx, by - 1, cellW + 0.5, 1);
+          if (!isSolid(r + 1, c)) ctx.fillRect(bx, by + cellH, cellW + 0.5, 1);
+          if (!isSolid(r, c - 1)) ctx.fillRect(bx - 1, by, 1, cellH + 0.5);
+          if (!isSolid(r, c + 1)) ctx.fillRect(bx + cellW, by, 1, cellH + 0.5);
+        }
+      }
+    }
+
+    function drawFrenchFry(b) {
+      const fryGold = '#F4C430';
+      const fryTip = '#8B4513';
+      for (let i = -1; i <= 1; i++) {
+        const fx = b.x + i * 3;
+        ctx.fillStyle = fryGold;
+        ctx.fillRect(fx - 1, b.y - 9, 2, 7);
+        ctx.fillStyle = fryTip;
+        ctx.fillRect(fx - 1, b.y - 10, 2, 2);
+      }
+    }
+
+    function drawKetchupBlob(b) {
+      ctx.fillStyle = '#B80000';
+      ctx.beginPath();
+      ctx.ellipse(b.x, b.y, 4, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#EF3340';
+      ctx.beginPath();
+      ctx.arc(b.x - 1, b.y - 2, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function drawBullet(b) {
+      if (b.fromPlayer) drawFrenchFry(b);
+      else drawKetchupBlob(b);
+    }
+
+    function drawStars() {
+      ctx.fillStyle = '#222';
+      for (let i = 0; i < 40; i++) {
+        const sx = (i * 137 + frame * 0.1) % W;
+        const sy = (i * 89) % (H - 100);
+        ctx.fillRect(sx, sy, 2, 2);
+      }
+    }
+
+    function drawHUD() {
+      ctx.fillStyle = '#39ff14';
+      ctx.font = '16px "Courier New", monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(`SCORE ${String(score).padStart(6, '0')}`, 20, 28);
+      ctx.textAlign = 'center';
+      ctx.fillText(`LEVEL ${level}`, W / 2, 28);
+      ctx.textAlign = 'right';
+      ctx.fillText(`LIVES`, W - 175, 28);
+      for (let i = 0; i < lives; i++) {
+        ctx.fillStyle = PLAYER_BLUE;
+        ctx.beginPath();
+        const lx = W - 155 + i * 15;
+        ctx.moveTo(lx, 38);
+        ctx.lineTo(lx - 6, 50);
+        ctx.lineTo(lx + 6, 50);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+
+    function drawStartScreen() {
+      drawStars();
+      const pilotLabel = getPlayerName().toUpperCase();
+      ctx.fillStyle = '#ffaa00';
+      ctx.textAlign = 'center';
+      ctx.font = '28px "Courier New", monospace';
+      ctx.fillText('PLAYER: ' + pilotLabel, W/2, START_PLAYER_NAME_Y);
+      ctx.font = '12px "Courier New", monospace';
+      ctx.fillStyle = '#39ff14';
+      ctx.globalAlpha = 0.75;
+      ctx.fillText('(click name to change)', W/2, START_PLAYER_NAME_HINT_Y);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = '#39ff14';
+      ctx.font = '48px "Courier New", monospace';
+      ctx.fillText('SPACE INVADERS', W/2, H/2 - 80);
+      ctx.font = '18px "Courier New", monospace';
+      ctx.fillText('DEFEND EARTH FROM THE ALIEN HORDE', W/2, H/2 - 30);
+      ctx.font = '15px "Courier New", monospace';
+      ctx.fillText('INVADERS: AUSTRIA  ·  BELGIUM  ·  USA  (' + GAME_VERSION + ')', W/2, H/2 + 2);
+      ctx.font = '18px "Courier New", monospace';
+      if (isTouchDevice) {
+        ctx.fillText('◀ ▶ BUTTONS  —  MOVE SHIP', W/2, H/2 + 20);
+        ctx.fillText('FIRE BUTTON  —  SHOOT', W/2, H/2 + 50);
+      } else {
+        ctx.fillText('← → or A D  —  MOVE SHIP', W/2, H/2 + 20);
+        ctx.fillText('SPACE  —  FIRE', W/2, H/2 + 50);
+      }
+      ctx.fillText('DESTROY ALL INVADERS TO ADVANCE', W/2, H/2 + 80);
+      if (Math.floor(frame / 30) % 2 === 0) {
+        ctx.font = '22px "Courier New", monospace';
+        ctx.fillText(isTouchDevice ? 'TAP TO START' : 'PRESS SPACE TO START', W/2, H/2 + 130);
+      }
+      if (NIFI_STREAM.enabled) {
+        ctx.font = '11px "Courier New", monospace';
+        ctx.fillStyle = '#66ccff';
+        ctx.fillText('NiFi POST ON', W / 2, H - 36);
+        ctx.fillStyle = '#4488aa';
+        const nu = getNifiListenUrl();
+        const short = nu.length > 62 ? nu.slice(0, 59) + '…' : nu;
+        ctx.fillText(short, W / 2, H - 20);
+      }
+    }
+
+    function drawGameOver() {
+      drawStars();
+      ctx.fillStyle = '#ff4466';
+      ctx.textAlign = 'center';
+      ctx.font = '48px "Courier New", monospace';
+      ctx.fillText('GAME OVER', W/2, H/2 - 40);
+      ctx.fillStyle = '#39ff14';
+      ctx.font = '20px "Courier New", monospace';
+      ctx.fillText(`FINAL SCORE: ${score}`, W/2, H/2 + 10);
+      if (Math.floor(frame / 30) % 2 === 0) {
+        ctx.fillText(isTouchDevice ? 'TAP TO RESTART' : 'PRESS SPACE TO RESTART', W/2, H/2 + 60);
+      }
+    }
+
+    function drawWin() {
+      drawStars();
+      ctx.fillStyle = '#ffaa00';
+      ctx.textAlign = 'center';
+      ctx.font = '40px "Courier New", monospace';
+      ctx.fillText('YOU WIN!', W/2, H/2 - 40);
+      ctx.fillStyle = '#39ff14';
+      ctx.font = '20px "Courier New", monospace';
+      ctx.fillText(`SCORE: ${score}`, W/2, H/2 + 10);
+      if (Math.floor(frame / 30) % 2 === 0) {
+        ctx.fillText(isTouchDevice ? 'TAP TO PLAY AGAIN' : 'PRESS SPACE TO PLAY AGAIN', W/2, H/2 + 60);
+      }
+    }
+
+    function rectsOverlap(a, b) {
+      return Math.abs(a.x - b.x) < (a.w + b.w) / 2 && Math.abs(a.y - b.y) < (a.h + b.h) / 2;
+    }
+
+    function bulletHitsBunker(bullet, bunker, bunkerIndex) {
+      const cellW = bunker.w / bunker.pixels[0].length;
+      const cellH = bunker.h / bunker.pixels.length;
+      for (let r = 0; r < bunker.pixels.length; r++) {
+        for (let c = 0; c < bunker.pixels[r].length; c++) {
+          if (!bunker.pixels[r][c]) continue;
+          const bx = bunker.x + c * cellW;
+          const by = bunker.y + r * cellH;
+          if (bullet.x >= bx && bullet.x <= bx + cellW && bullet.y >= by && bullet.y <= by + cellH) {
+            let pixelsDestroyed = 0;
+            for (let dr = -1; dr <= 1; dr++) {
+              for (let dc = -1; dc <= 1; dc++) {
+                const nr = r + dr, nc = c + dc;
+                if (nr >= 0 && nr < bunker.pixels.length && nc >= 0 && nc < bunker.pixels[0].length) {
+                  if (bunker.pixels[nr][nc]) pixelsDestroyed++;
+                  bunker.pixels[nr][nc] = 0;
+                }
+              }
+            }
+            return {
+              bunkerIndex,
+              bunkerPosition: { x: bunker.x, y: bunker.y },
+              pixelHit: { row: r, col: c },
+              pixelsDestroyed,
+              bulletPosition: { x: bullet.x, y: bullet.y }
+            };
+          }
+        }
+      }
+      return null;
+    }
+
+    function updatePlayer() {
+      if (keys['ArrowLeft'] || keys['KeyA'] || touchInput.left) player.x -= player.speed;
+      if (keys['ArrowRight'] || keys['KeyD'] || touchInput.right) player.x += player.speed;
+      player.x = Math.max(player.w/2 + 10, Math.min(W - player.w/2 - 10, player.x));
+
+      if (player.cooldown > 0) player.cooldown--;
+      if ((keys['Space'] || keys['ArrowUp'] || keys['KeyW'] || touchInput.fire) && player.cooldown <= 0) {
+        playerBullets.push({ x: player.x, y: player.y - 20, w: 4, h: 10, speed: 9, fromPlayer: true });
+        player.cooldown = 20;
+        beep(600, 0.05, 'square', 0.05);
+      }
+    }
+
+    function updateInvaders() {
+      const alive = getAliveInvaders();
+      if (alive.length === 0) {
+        publishGameEvent('level.completed', {
+          completedLevel: level,
+          nextLevel: level + 1,
+          scoreAtCompletion: score,
+          livesRemaining: lives,
+          durationMs: Date.now() - (levelStartTime || Date.now())
+        });
+        nextLevel();
+        levelStartTime = Date.now();
+        return;
+      }
+
+      invaderMoveTimer++;
+      const speed = getInvaderSpeed();
+      if (invaderMoveTimer >= speed) {
+        invaderMoveTimer = 0;
+        beep(40 + (INVADER_ROWS * INVADER_COLS - alive.length), 0.03, 'square', 0.03);
+
+        if (invaderStepDown) {
+          alive.forEach(inv => { inv.y += 16; });
+          invaderDir *= -1;
+          invaderStepDown = false;
+        } else {
+          let hitEdge = false;
+          alive.forEach(inv => {
+            inv.x += invaderDir * 10;
+            if (inv.x + inv.w/2 >= W - 20 || inv.x - inv.w/2 <= 20) hitEdge = true;
+          });
+          if (hitEdge) invaderStepDown = true;
+        }
+
+        // Check if invaders reached player
+        for (const inv of alive) {
+          if (inv.y + inv.h/2 >= player.y - 20) {
+            state = STATE.GAMEOVER;
+            beep(150, 0.5, 'sawtooth', 0.1);
+            return;
+          }
+        }
+      }
+
+      // Invader shooting
+      invaderShootTimer--;
+      if (invaderShootTimer <= 0) {
+        invaderShootTimer = 30 + Math.random() * 60;
+        const shooters = alive.filter(i => {
+          // Only bottom invader in each column can shoot
+          const colMates = alive.filter(j => j.col === i.col);
+          const bottom = colMates.reduce((a, b) => a.row > b.row ? a : b);
+          return bottom === i;
+        });
+        if (shooters.length > 0) {
+          const shooter = shooters[Math.floor(Math.random() * shooters.length)];
+          invaderBullets.push({
+            x: shooter.x, y: shooter.y + shooter.h/2,
+            w: 4, h: 10, speed: 4 + level * 0.3, fromPlayer: false
+          });
+        }
+      }
+    }
+
+    function updateBullets() {
+      playerBullets = playerBullets.filter(b => {
+        b.y -= b.speed;
+        if (b.y < 0) return false;
+
+        for (let bi = 0; bi < bunkers.length; bi++) {
+          const hit = bulletHitsBunker(b, bunkers[bi], bi);
+          if (hit) {
+            if (b.fromPlayer) publishGameEvent('bunker.friendly_fire', hit);
+            return false;
+          }
+        }
+
+        for (const inv of invaders) {
+          if (!inv.alive) continue;
+          if (rectsOverlap(b, inv)) {
+            const prevScore = score;
+            inv.alive = false;
+            score += inv.type.points;
+            publishGameEvent('invader.killed', {
+              invaderRow: inv.row,
+              invaderCol: inv.col,
+              flag: inv.flag,
+              pointsAwarded: inv.type.points,
+              position: { x: inv.x, y: inv.y },
+              remainingInvaders: getAliveInvaders().length
+            });
+            publishGameEvent('score.changed', {
+              previousScore: prevScore,
+              newScore: score,
+              delta: inv.type.points,
+              reason: 'invader_kill'
+            });
+            beep(200, 0.08, 'square', 0.06);
+            return false;
+          }
+        }
+        return true;
+      });
+
+      invaderBullets = invaderBullets.filter(b => {
+        b.y += b.speed;
+        if (b.y > H) return false;
+
+        for (let bi = 0; bi < bunkers.length; bi++) {
+          if (bulletHitsBunker(b, bunkers[bi], bi)) return false;
+        }
+
+        if (rectsOverlap(b, player)) {
+          const prevLives = lives;
+          lives--;
+          const gameOver = lives <= 0;
+          publishGameEvent('player.destroyed', {
+            position: { x: player.x, y: player.y },
+            cause: 'invader_bullet',
+            livesRemainingAfter: lives,
+            gameOver
+          });
+          publishGameEvent('lives.changed', {
+            previousLives: prevLives,
+            newLives: lives,
+            reason: 'player_hit'
+          });
+          beep(100, 0.3, 'sawtooth', 0.1);
+          invaderBullets = [];
+          playerBullets = [];
+          player.x = W / 2;
+          if (lives <= 0) state = STATE.GAMEOVER;
+          return false;
+        }
+        return true;
+      });
+    }
+
+    function update() {
+      frame++;
+      if (state === STATE.PLAYING) {
+        updatePlayer();
+        updateInvaders();
+        updateBullets();
+      }
+    }
+
+    function render() {
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, W, H);
+
+      if (state === STATE.START) {
+        drawStartScreen();
+        return;
+      }
+      if (state === STATE.GAMEOVER) {
+        drawGameOver();
+        return;
+      }
+      if (state === STATE.WIN) {
+        drawWin();
+        return;
+      }
+
+      drawStars();
+      bunkers.forEach(drawBunker);
+      getAliveInvaders().forEach(inv => drawInvader(inv, frame));
+      playerBullets.forEach(drawBullet);
+      invaderBullets.forEach(drawBullet);
+      drawPlayer();
+      drawHUD();
+    }
+
+    function gameLoop() {
+      update();
+      render();
+      requestAnimationFrame(gameLoop);
+    }
+
+    try {
+      gameLoop();
+      setTimeout(maybePromptPlayerNameOnFirstVisit, 400);
+    } catch (bootErr) {
+      console.error('[game] boot failed', bootErr);
+      ctx.fillStyle = '#ff4466';
+      ctx.font = '16px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('Game failed to start — see console', W / 2, H / 2);
+    }
+  </script>
+</body>
+</html>

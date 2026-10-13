@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Space Invaders — Top Pilots</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: #050508;
+      color: #39ff14;
+      font-family: "Courier New", Courier, monospace;
+      overflow-x: hidden;
+    }
+    #starfield {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 1.25rem 1rem 2rem;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 1.25rem;
+    }
+    h1 {
+      font-size: clamp(1.1rem, 4vw, 1.75rem);
+      letter-spacing: 0.25em;
+      text-shadow: 0 0 12px #39ff14, 0 0 24px rgba(57, 255, 20, 0.35);
+    }
+    .subtitle {
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+      color: #66ccff;
+      letter-spacing: 0.12em;
+      opacity: 0.9;
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+    button, select {
+      font-family: inherit;
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      border: 2px solid #39ff14;
+      background: rgba(57, 255, 20, 0.06);
+      color: #39ff14;
+      padding: 0.45rem 0.75rem;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    button:hover { background: rgba(57, 255, 20, 0.14); }
+    button:disabled { opacity: 0.45; cursor: wait; }
+    select { max-width: min(100%, 420px); }
+    .status {
+      width: 100%;
+      text-align: center;
+      font-size: 0.7rem;
+      min-height: 1.2em;
+      color: #ffaa00;
+    }
+    .status.err { color: #ff4466; }
+    .panel {
+      border: 3px solid #39ff14;
+      box-shadow: 0 0 24px rgba(57, 255, 20, 0.22);
+      background: rgba(0, 0, 0, 0.72);
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .window-label {
+      text-align: center;
+      font-size: 0.72rem;
+      color: #66ccff;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.75rem;
+    }
+    .invader-row {
+      display: grid;
+      grid-template-columns: 3rem 1fr auto;
+      gap: 0.5rem 0.75rem;
+      align-items: center;
+      padding: 0.55rem 0.35rem;
+      border-bottom: 1px solid rgba(57, 255, 20, 0.15);
+      animation: fadeIn 0.35s ease;
+    }
+    .invader-row:last-child { border-bottom: none; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateX(-6px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    .rank {
+      font-size: 1.25rem;
+      font-weight: bold;
+      text-align: center;
+    }
+    .rank.gold { color: #ffd700; text-shadow: 0 0 8px #ffd700; }
+    .rank.silver { color: #c0c0c0; text-shadow: 0 0 6px #aaa; }
+    .rank.bronze { color: #cd7f32; text-shadow: 0 0 6px #cd7f32; }
+    .pilot-name {
+      font-size: 1rem;
+      letter-spacing: 0.06em;
+      text-shadow: 0 0 6px rgba(57, 255, 20, 0.4);
+    }
+    .pilot-id {
+      font-size: 0.62rem;
+      opacity: 0.55;
+      margin-top: 0.15rem;
+      word-break: break-all;
+    }
+    .score {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #ffaa00;
+      text-align: right;
+      min-width: 4.5rem;
+    }
+    .score small { display: block; font-size: 0.55rem; color: #39ff14; opacity: 0.7; }
+    .empty {
+      text-align: center;
+      padding: 2rem 1rem;
+      opacity: 0.75;
+      font-size: 0.85rem;
+    }
+    .auth-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      background: rgba(0, 0, 0, 0.88);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .auth-overlay.visible { display: flex; }
+    .auth-card {
+      border: 2px solid #66ccff;
+      background: #0a0a12;
+      padding: 1.25rem;
+      max-width: 360px;
+      width: 100%;
+      box-shadow: 0 0 20px rgba(102, 204, 255, 0.25);
+    }
+    .auth-card h2 {
+      font-size: 0.85rem;
+      letter-spacing: 0.15em;
+      margin-bottom: 0.75rem;
+      color: #66ccff;
+    }
+    .auth-card label {
+      display: block;
+      font-size: 0.65rem;
+      margin: 0.5rem 0 0.2rem;
+      opacity: 0.85;
+    }
+    .auth-card input {
+      width: 100%;
+      padding: 0.45rem;
+      font-family: inherit;
+      background: #000;
+      border: 1px solid #39ff14;
+      color: #39ff14;
+    }
+    .auth-card p {
+      font-size: 0.62rem;
+      margin-top: 0.75rem;
+      opacity: 0.65;
+      line-height: 1.4;
+    }
+    footer {
+      text-align: center;
+      font-size: 0.65rem;
+      opacity: 0.6;
+      margin-top: 1rem;
+    }
+    footer a { color: #66ccff; }
+  </style>
+</head>
+<body>
+  <canvas id="starfield" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <header>
+      <h1>▮ TOP PILOTS ▮</h1>
+      <p class="subtitle">FLINK SSB · LIVE SCORE WINDOW</p>
+    </header>
+    <div class="toolbar">
+      <button type="button" id="btn-refresh">↻ REFRESH</button>
+      <label>
+        <span class="visually-hidden">Window</span>
+        <select id="window-select" disabled>
+          <option value="">Latest window</option>
+        </select>
+      </label>
+      <button type="button" id="btn-auth">CDP LOGIN</button>
+      <span class="status" id="status">Initializing…</span>
+    </div>
+    <section class="panel" id="board-panel">
+      <p class="window-label" id="window-label">—</p>
+      <div id="leaderboard"></div>
+    </section>
+    <footer>
+      <a href="index.html">← Back to game</a>
+      · Flink materialized view · auto-refresh 20s
+    </footer>
+  </div>
+
+  <div class="auth-overlay" id="auth-overlay" role="dialog" aria-labelledby="auth-title">
+    <div class="auth-card">
+      <h2 id="auth-title">CDP GATEWAY LOGIN</h2>
+      <label for="auth-user">Username</label>
+      <input id="auth-user" type="text" autocomplete="username">
+      <label for="auth-pass">Password</label>
+      <input id="auth-pass" type="password" autocomplete="current-password">
+      <button type="button" id="btn-auth-save" style="margin-top:0.75rem;width:100%">CONNECT</button>
+      <p>Use when opening this file without the dev proxy. Credentials stay in <code>sessionStorage</code> only. Prefer <code>serve-with-nifi-proxy.py</code> with <code>SSB_USER</code> / <code>SSB_PASSWORD</code> env vars.</p>
+    </div>
+  </div>
+
+  <script>
+    const DEFAULT_DIRECT_API =
+      'https://trition-si-gateway.se-sandb.a465-9q4k.cloudera.site/trition-si/cdp-proxy-api/ssb-mve-api/api/v1/query/5198/top10player?key=14de1710-a15b-49ef-a088-83a9c43a631f';
+    const PROXY_PATH = '/api/ssb/top10player';
+    const REFRESH_MS = 20000;
+    const AUTH_USER_KEY = 'si-ssb-user';
+    const AUTH_PASS_KEY = 'si-ssb-pass';
+
+    const params = new URLSearchParams(location.search);
+    const useProxy = params.get('proxy') !== '0';
+    const apiDirect = params.get('api') || DEFAULT_DIRECT_API;
+    const limit = params.get('limit') || '100';
+
+    const statusEl = document.getElementById('status');
+    const boardEl = document.getElementById('leaderboard');
+    const windowLabel = document.getElementById('window-label');
+    const windowSelect = document.getElementById('window-select');
+    const btnRefresh = document.getElementById('btn-refresh');
+    const authOverlay = document.getElementById('auth-overlay');
+
+    let allRows = [];
+    let refreshTimer = null;
+
+    function setStatus(msg, isErr) {
+      statusEl.textContent = msg;
+      statusEl.classList.toggle('err', !!isErr);
+    }
+
+    function fetchUrl() {
+      const q = `limit=${encodeURIComponent(limit)}`;
+      if (useProxy) return `${PROXY_PATH}?${q}`;
+      return apiDirect.includes('?') ? `${apiDirect}&${q}` : `${apiDirect}?${q}`;
+    }
+
+    function basicAuthHeader() {
+      const u = sessionStorage.getItem(AUTH_USER_KEY) || '';
+      const p = sessionStorage.getItem(AUTH_PASS_KEY) || '';
+      if (!u) return null;
+      return 'Basic ' + btoa(unescape(encodeURIComponent(`${u}:${p}`)));
+    }
+
+    async function loadData() {
+      btnRefresh.disabled = true;
+      setStatus('Fetching rankings…', false);
+      const init = { method: 'GET', headers: { Accept: 'application/json' } };
+      if (!useProxy) {
+        const auth = basicAuthHeader();
+        if (!auth) {
+          setStatus('CDP login required (or use dev proxy).', true);
+          authOverlay.classList.add('visible');
+          btnRefresh.disabled = false;
+          return;
+        }
+        init.headers.Authorization = auth;
+      }
+      try {
+        const res = await fetch(fetchUrl(), init);
+        if (res.status === 401 || res.status === 403) {
+          setStatus('Auth failed — check CDP login.', true);
+          authOverlay.classList.add('visible');
+          return;
+        }
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        if (!Array.isArray(data)) throw new Error('Expected JSON array');
+        allRows = data.map(normalizeRow);
+        buildWindowOptions();
+        renderSelectedWindow();
+        setStatus(`Updated ${new Date().toLocaleTimeString()} · ${allRows.length} rows`, false);
+      } catch (err) {
+        console.error(err);
+        const hint = useProxy
+          ? 'Start serve-with-nifi-proxy.py (SSB_USER/SSB_PASSWORD set).'
+          : 'CORS or network error — use proxy mode (default) or CDP login.';
+        setStatus(String(err.message || err) + ' — ' + hint, true);
+      } finally {
+        btnRefresh.disabled = false;
+      }
+    }
+
+    function normalizeRow(r) {
+      return {
+        window_start: String(r.window_start ?? ''),
+        window_end: String(r.window_end ?? ''),
+        player_rank: parseInt(r.player_rank, 10) || 999,
+        player_id: String(r.player_id ?? ''),
+        player_name: String(r.player_name ?? 'UNKNOWN'),
+        score: parseInt(r.score, 10) || 0,
+        windowKey: `${r.window_start}|${r.window_end}`,
+      };
+    }
+
+    function parseWindowTime(s) {
+      const t = Date.parse(String(s).replace(' ', 'T'));
+      return Number.isNaN(t) ? 0 : t;
+    }
+
+    function buildWindowOptions() {
+      const windows = new Map();
+      for (const row of allRows) {
+        if (!windows.has(row.windowKey)) {
+          windows.set(row.windowKey, {
+            key: row.windowKey,
+            start: row.window_start,
+            end: row.window_end,
+            sort: parseWindowTime(row.window_end),
+          });
+        }
+      }
+      const sorted = [...windows.values()].sort((a, b) => b.sort - a.sort);
+      const prev = windowSelect.value;
+      windowSelect.innerHTML = '';
+      for (const w of sorted) {
+        const opt = document.createElement('option');
+        opt.value = w.key;
+        opt.textContent = `${w.start} → ${w.end}`;
+        windowSelect.appendChild(opt);
+      }
+      windowSelect.disabled = sorted.length === 0;
+      if (prev && sorted.some((w) => w.key === prev)) windowSelect.value = prev;
+      else if (sorted[0]) windowSelect.value = sorted[0].key;
+    }
+
+    function rowsForWindow(key) {
+      return allRows
+        .filter((r) => r.windowKey === key)
+        .sort((a, b) => a.player_rank - b.player_rank);
+    }
+
+    function renderSelectedWindow() {
+      const key = windowSelect.value || allRows.reduce((best, r) => {
+        if (!best) return r.windowKey;
+        const bt = parseWindowTime(allRows.find((x) => x.windowKey === best)?.window_end);
+        const rt = parseWindowTime(r.window_end);
+        return rt > bt ? r.windowKey : best;
+      }, '');
+      if (!key) {
+        boardEl.innerHTML = '<p class="empty">No ranking data yet.</p>';
+        windowLabel.textContent = '—';
+        return;
+      }
+      const rows = rowsForWindow(key);
+      const sample = rows[0] || allRows.find((r) => r.windowKey === key);
+      windowLabel.textContent = sample
+        ? `WINDOW ${sample.window_start} — ${sample.window_end}`
+        : key;
+      if (!rows.length) {
+        boardEl.innerHTML = '<p class="empty">No pilots in this window.</p>';
+        return;
+      }
+      boardEl.innerHTML = rows
+        .map((row) => {
+          const rc = row.player_rank === 1 ? 'gold' : row.player_rank === 2 ? 'silver' : row.player_rank === 3 ? 'bronze' : '';
+          const icon = row.player_rank <= 3 ? '▲' : '·';
+          return `<article class="invader-row" style="animation-delay:${Math.min(row.player_rank, 12) * 0.03}s">
+            <div class="rank ${rc}">${icon}${row.player_rank}</div>
+            <div>
+              <div class="pilot-name">${escapeHtml(row.player_name)}</div>
+              <div class="pilot-id">${escapeHtml(row.player_id)}</div>
+            </div>
+            <div class="score">${row.score.toLocaleString()}<small>PTS</small></div>
+          </article>`;
+        })
+        .join('');
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function initStars() {
+      const canvas = document.getElementById('starfield');
+      const ctx = canvas.getContext('2d');
+      let stars = [];
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        stars = Array.from({ length: 120 }, () => ({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          z: Math.random() * 2 + 0.5,
+        }));
+      }
+      function tick() {
+        ctx.fillStyle = '#050508';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#fff';
+        for (const s of stars) {
+          s.y += s.z * 0.35;
+          if (s.y > canvas.height) {
+            s.y = 0;
+            s.x = Math.random() * canvas.width;
+          }
+          ctx.globalAlpha = 0.35 + s.z * 0.25;
+          ctx.fillRect(s.x, s.y, 1.5, 1.5);
+        }
+        ctx.globalAlpha = 1;
+        requestAnimationFrame(tick);
+      }
+      window.addEventListener('resize', resize);
+      resize();
+      tick();
+    }
+
+    document.getElementById('btn-refresh').addEventListener('click', () => loadData());
+    windowSelect.addEventListener('change', renderSelectedWindow);
+    document.getElementById('btn-auth').addEventListener('click', () => {
+      document.getElementById('auth-user').value = sessionStorage.getItem(AUTH_USER_KEY) || '';
+      authOverlay.classList.add('visible');
+    });
+    document.getElementById('btn-auth-save').addEventListener('click', () => {
+      sessionStorage.setItem(AUTH_USER_KEY, document.getElementById('auth-user').value.trim());
+      sessionStorage.setItem(AUTH_PASS_KEY, document.getElementById('auth-pass').value);
+      authOverlay.classList.remove('visible');
+      loadData();
+    });
+    authOverlay.addEventListener('click', (e) => {
+      if (e.target === authOverlay) authOverlay.classList.remove('visible');
+    });
+
+    initStars();
+    loadData();
+    refreshTimer = setInterval(loadData, REFRESH_MS);
+  </script>
+</body>
+</html>

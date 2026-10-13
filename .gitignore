@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Node (optional Kafka browser bundle — not shipped in this repo)
+scripts/node_modules/
+node_modules/
+
+# Large / generated artifacts
+kafka-browser-producer.js
+_leaderboard_blob.txt
+
+# Secrets and local env
+.env
+.env.*
+*.pem
+*.key
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
