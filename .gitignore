@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 .venv/
+.venv-screenshots/
 venv/
 
 # Node (optional Kafka browser bundle — not shipped in this repo)

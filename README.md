@@ -1,20 +1,38 @@
 # Space Invaders — Flag Edition
 
-A browser-based classic Space Invaders arcade game built with HTML5 Canvas and vanilla JavaScript.
+<p align="center">
+  <img src="docs/images/start-screen.png" alt="Space Invaders Flag Edition — start screen" width="720">
+</p>
 
-**Theme:** Invaders are split in thirds — Austria (red/white/red), Belgium (black/yellow/red), and US (stars & stripes); player shots are pixel-art French fries and enemy shots are ketchup blobs.
+<p align="center">
+  <strong>Classic arcade action in the browser</strong> — HTML5 Canvas, vanilla JavaScript, no build step.
+</p>
 
-**Build tag:** `flag-edition-v15-nifi-listenhttp` (shown on the start screen).
+<p align="center">
+  Invaders wear <strong>Austria</strong>, <strong>Belgium</strong>, and <strong>US</strong> flag pixels; you fire pixel-art <strong>french fries</strong>; they shoot <strong>ketchup</strong>. Green CRT vibes included.
+</p>
 
-## How to Run
+---
 
-**Option 1 — Open directly**
+## Screenshots
 
-Double-click `index.html` or open it in any modern browser. Hard-refresh (`Cmd+Shift+R` / `Ctrl+Shift+R`) if assets look stale.
+| Start screen | In play |
+|:---:|:---:|
+| ![Start screen](docs/images/start-screen.png) | ![Gameplay](docs/images/gameplay.png) |
 
-**Option 2 — Local static server (recommended for NiFi / CORS testing)**
+<p align="center">
+  <img src="docs/images/mobile-gameplay.png" alt="iPhone layout with on-screen touch controls" width="360">
+  <br>
+  <em>Mobile / iPhone — full viewport, safe areas, on-screen ◀ FIRE ▶ controls</em>
+</p>
 
-From the repository root:
+---
+
+## Quick start
+
+**Fastest:** double-click [`index.html`](index.html) or open it in any modern browser. Hard-refresh (`Cmd+Shift+R` / `Ctrl+Shift+R`) if assets look stale.
+
+**Recommended** (NiFi / CORS testing) — from the repo root:
 
 ```bash
 python3 -m http.server 8080
@@ -26,7 +44,11 @@ Then open [http://localhost:8080/index.html](http://localhost:8080/index.html).
 
 Mac setup notes: [sync-local-mac.md](./sync-local-mac.md)
 
-## How to Play
+**Build tag:** `flag-edition-v20-init-order-fix` (shown on the start screen).
+
+---
+
+## How to play
 
 ### Desktop (keyboard)
 
@@ -55,9 +77,13 @@ On iPhone Safari the game fills the viewport (portrait or landscape), respects s
 - **10 lives** — lose them all and it's game over.
 - Score: top row 30 pts, middle 20 pts, bottom 10 pts.
 
+---
+
 ## Player name
 
 On first visit the game prompts for a pilot name (**PLAYER: {NAME}** on the intro — click to change). Events include `playerId` and `playerName`.
+
+---
 
 ## Event streaming (console mock)
 
@@ -70,6 +96,8 @@ index.html?events=1
 Or persist: `localStorage.setItem('si-events', '1')`.
 
 Schema reference: [kafka-streaming-proposal.md](./kafka-streaming-proposal.md) (event shapes only; default transport is **NiFi ListenHTTP**, not Kafka).
+
+---
 
 ## NiFi ListenHTTP export (primary)
 
@@ -100,9 +128,13 @@ Example curl:
 
 Simulate many players: `./simulate-players-nifi.sh`
 
+---
+
 ## Top 10 leaderboard (optional)
 
 Flink SSB-backed ranking UI: [top10-leaderboard.html](./top10-leaderboard.html) — see [top10-leaderboard.md](./top10-leaderboard.md). Requires `SSB_USER` / `SSB_PASSWORD` when using [serve-with-nifi-proxy.py](./serve-with-nifi-proxy.py).
+
+---
 
 ## Dev tools in this repo
 
@@ -112,10 +144,14 @@ Flink SSB-backed ranking UI: [top10-leaderboard.html](./top10-leaderboard.html) 
 | `simulate-players-nifi.py` / `.sh` | Synthetic game events to NiFi |
 | `curl-smoke-test.sh` | One-shot ingest smoke test |
 
+---
+
 ## License
 
 MIT — see [LICENSE](./LICENSE).
 
-## Not included in GitHub
+---
+
+## Not included on GitHub
 
 The optional ~2.7 MB `kafka-browser-producer.js` bundle and `scripts/node_modules` are omitted to keep the repo small. See [public-kafka-ingest.md](./public-kafka-ingest.md) for historical Kafka notes.
