@@ -69,6 +69,20 @@ Mac setup notes: [sync-local-mac.md](./sync-local-mac.md)
 
 On iPhone Safari the game fills the viewport (portrait or landscape), respects safe areas, and uses on-screen controls.
 
+### iPhone standalone (Add to Home Screen)
+
+Install like a mini app: open the game in **Safari** from an **http(s) URL** (hosted site or your Mac’s LAN IP — not `file://`), then **Share → Add to Home Screen**. Launch from the icon for full-screen play with touch controls.
+
+**Hosted example:**
+
+```text
+https://frothkoetter.github.io/space-invaders-arcade/index.html
+```
+
+**Same Wi‑Fi as Mac** (`python3 -m http.server 8080 --bind 0.0.0.0`, then use `http://YOUR_MAC_LAN_IP:8080/index.html` on the phone).
+
+Step-by-step, NiFi bookmarks, and troubleshooting: [iphone-standalone.md](./iphone-standalone.md).
+
 ### Rules
 
 - Destroy all invaders to advance to the next level.
