@@ -134,6 +134,12 @@ Simulate many players: `./simulate-players-nifi.sh`
 
 Flink SSB-backed ranking UI: [top10-leaderboard.html](./top10-leaderboard.html) — see [top10-leaderboard.md](./top10-leaderboard.md). Requires `SSB_USER` / `SSB_PASSWORD` when using [serve-with-nifi-proxy.py](./serve-with-nifi-proxy.py).
 
+<p align="center">
+  <img src="docs/images/leaderboard.png" alt="Top 10 pilots leaderboard — Flink SSB live score window" width="720">
+  <br>
+  <em>Sample rankings (screenshot uses mock data; live page reads Flink SSB <code>top10player</code>)</em>
+</p>
+
 ---
 
 ## Dev tools in this repo
