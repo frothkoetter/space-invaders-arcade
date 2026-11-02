@@ -7,7 +7,7 @@ This repository is the **standalone** Space Invaders game and docs. You do not n
 ```bash
 git clone git@github.com:YOUR_USER/space-invaders-arcade.git
 cd space-invaders-arcade
-grep "flag-edition-v15-nifi-listenhttp" index.html   # sanity check
+grep "arcade-v21-snow-dbx-burger" index.html   # sanity check
 python3 -m http.server 8080
 ```
 

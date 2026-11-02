@@ -74,7 +74,8 @@ All events share a common envelope. Per-event payloads live in `data`.
   "data": {
     "invaderRow": 0,
     "invaderCol": 5,
-    "flag": "belgium",
+    "symbol": "databricks",
+    "flag": "databricks",
     "pointsAwarded": 30,
     "position": { "x": 320, "y": 70 },
     "remainingInvaders": 54

@@ -68,7 +68,7 @@ NiFi: FlowFiles on **ListenHTTP** (batched up to 50 events every 500 ms).
   "session_id": "…",
   "player_id": "anon-…",
   "player_name": "PILOT",
-  "game_version": "flag-edition-v20-init-order-fix",
+  "game_version": "arcade-v21-snow-dbx-burger",
   "level": 1,
   "frame": 420,
   "data_json": "{\"pointsAwarded\":10}"

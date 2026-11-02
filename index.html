@@ -7,8 +7,8 @@
   <meta name="apple-mobile-web-app-title" content="Space Invaders">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="mobile-web-app-capable" content="yes">
-  <title>Space Invaders — Flag Edition</title>
-  <!-- build: flag-edition-v20-init-order-fix -->
+  <title>Space Invaders — Arcade Edition</title>
+  <!-- build: arcade-v21-snow-dbx-burger -->
   <!-- CDP ingest example (localStorage si-nifi-listen-url): http://projtriton.inbound.dfx.hahgzjod.a465-9q4k.cloudera.site:9088/space-invaders (9088 is HTTP, not HTTPS) -->
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -216,7 +216,7 @@
     let frame = 0;
 
     // --- Event streaming (console mock + NiFi ListenHTTP POST + optional legacy TCP) ---
-    const GAME_VERSION = 'flag-edition-v20-init-order-fix';
+    const GAME_VERSION = 'arcade-v21-snow-dbx-burger';
     const TCP_SOCKET_SUPPORTED = 'TCPSocket' in globalThis;
     const DEFAULT_NIFI_LISTEN_URL = 'http://127.0.0.1:9998/space-invaders';
 
@@ -795,17 +795,14 @@
     let invaderShootTimer = 0;
     const INVADER_ROWS = 5;
     const INVADER_COLS = 11;
-    const BELGIUM = { black: '#000000', yellow: '#FDDA24', red: '#EF3340' };
-    const AUSTRIA = { red: '#ED2939', white: '#FFFFFF' };
-    const US = { red: '#B22234', white: '#FFFFFF', blue: '#3C3B6E' };
     const PLAYER_BLUE = '#3399FF';
     const INVADER_OUTLINE = '#2266CC';
-    const FLAG_TYPES = ['austria', 'belgium', 'us'];
+    const SYMBOL_TYPES = ['snowflake', 'databricks', 'hamburger'];
 
-    function getInvaderFlag(row, col) {
-      if (col < 4) return 'austria';
-      if (col < 8) return 'belgium';
-      return 'us';
+    function getInvaderSymbol(row, col) {
+      if (col < 4) return 'snowflake';
+      if (col < 8) return 'databricks';
+      return 'hamburger';
     }
     const INVADER_TYPES = [
       { points: 30, w: 32, h: 24 },
@@ -866,7 +863,7 @@
             row,
             col,
             type,
-            flag: getInvaderFlag(row, col),
+            symbol: getInvaderSymbol(row, col),
             alive: true,
             animFrame: 0
           });
@@ -919,60 +916,83 @@
       beep(1100, 0.2);
     }
 
-    function drawHorizontalStripes(x, y, w, h, colors) {
-      const top = y - h / 2;
-      const stripeH = h / colors.length;
-      colors.forEach((color, i) => {
-        ctx.fillStyle = color;
-        ctx.fillRect(x - w / 2, top + i * stripeH, w, stripeH + 0.5);
-      });
-    }
-
-    function drawAustriaFlag(x, y, w, h) {
-      drawHorizontalStripes(x, y, w, h, [AUSTRIA.red, AUSTRIA.white, AUSTRIA.red]);
-    }
-
-    function drawBelgiumFlag(x, y, w, h) {
-      drawHorizontalStripes(x, y, w, h, [BELGIUM.black, BELGIUM.yellow, BELGIUM.red]);
-    }
-
-    function drawUSFlag(x, y, w, h) {
+    function drawSnowflakeSymbol(x, y, w, h) {
       const left = x - w / 2;
       const top = y - h / 2;
-      const stripeCount = 6;
-      const stripeH = h / stripeCount;
-      for (let i = 0; i < stripeCount; i++) {
-        ctx.fillStyle = i % 2 === 0 ? US.red : US.white;
-        ctx.fillRect(left, top + i * stripeH, w, stripeH + 0.5);
-      }
-      const cantonW = w * 0.42;
-      const cantonH = h * 0.55;
-      ctx.fillStyle = US.blue;
-      ctx.fillRect(left, top, cantonW, cantonH);
-      ctx.fillStyle = US.white;
-      [[0.15, 0.14], [0.32, 0.14], [0.24, 0.24], [0.12, 0.34], [0.28, 0.34], [0.20, 0.44]].forEach(([sx, sy]) => {
-        ctx.fillRect(left + cantonW * sx, top + cantonH * sy, 2, 2);
-      });
+      ctx.fillStyle = '#0D47A1';
+      ctx.fillRect(left, top, w, h);
+      ctx.fillStyle = '#E3F2FD';
+      ctx.fillRect(left + 2, top + 2, w - 4, h - 4);
+      ctx.fillStyle = '#FFFFFF';
+      const cx = Math.floor(x);
+      const cy = Math.floor(y);
+      ctx.fillRect(cx - 1, top + 3, 2, h - 6);
+      ctx.fillRect(left + 3, cy - 1, w - 6, 2);
+      ctx.fillRect(cx - 5, cy - 5, 2, 2);
+      ctx.fillRect(cx + 3, cy - 5, 2, 2);
+      ctx.fillRect(cx - 5, cy + 3, 2, 2);
+      ctx.fillRect(cx + 3, cy + 3, 2, 2);
+      ctx.fillRect(cx - 7, cy - 1, 2, 2);
+      ctx.fillRect(cx + 5, cy - 1, 2, 2);
+      ctx.fillRect(cx - 1, cy - 7, 2, 2);
+      ctx.fillRect(cx - 1, cy + 5, 2, 2);
     }
 
-    function drawInvaderFlag(inv) {
-      const { x, y, w, h, flag } = inv;
-      if (flag === 'austria') drawAustriaFlag(x, y, w, h);
-      else if (flag === 'belgium') drawBelgiumFlag(x, y, w, h);
-      else drawUSFlag(x, y, w, h);
+    function drawDatabricksSymbol(x, y, w, h) {
+      const left = x - w / 2;
+      const top = y - h / 2;
+      ctx.fillStyle = '#FF3621';
+      ctx.fillRect(left, top, w, h);
+      ctx.fillStyle = '#FFFFFF';
+      const brickH = 4;
+      const gap = 2;
+      for (let i = 0; i < 3; i++) {
+        const inset = i === 1 ? 5 : 3;
+        const by = top + 4 + i * (brickH + gap);
+        ctx.fillRect(left + inset, by, w - inset * 2, brickH);
+      }
+    }
+
+    function drawHamburgerSymbol(x, y, w, h) {
+      const left = x - w / 2;
+      const top = y - h / 2;
+      const innerW = w - 6;
+      const ix = left + 3;
+      let yy = top + 2;
+      const layer = (color, lh) => {
+        ctx.fillStyle = color;
+        ctx.fillRect(ix, yy, innerW, lh);
+        yy += lh + 1;
+      };
+      layer('#E8B86D', 5);
+      ctx.fillStyle = '#FFF8E1';
+      ctx.fillRect(ix + 4, yy - 4, 2, 2);
+      ctx.fillRect(ix + 12, yy - 5, 2, 2);
+      ctx.fillRect(ix + 20, yy - 4, 2, 2);
+      layer('#FFC107', 2);
+      layer('#66BB6A', 3);
+      layer('#5D4037', 5);
+      layer('#D4A574', 5);
+    }
+
+    function drawInvaderSymbolBody(inv) {
+      const { x, y, w, h, symbol } = inv;
+      if (symbol === 'snowflake') drawSnowflakeSymbol(x, y, w, h);
+      else if (symbol === 'databricks') drawDatabricksSymbol(x, y, w, h);
+      else drawHamburgerSymbol(x, y, w, h);
     }
 
     function drawInvaderFace(inv, anim) {
       const cx = inv.x;
       const cy = inv.y;
       const ink = (localY) => {
-        if (inv.flag === 'austria') {
-          return localY >= -4 && localY < 4 ? '#000' : AUSTRIA.white;
+        if (inv.symbol === 'snowflake') {
+          return localY < -2 ? '#0D47A1' : '#1565C0';
         }
-        if (inv.flag === 'belgium') {
-          return localY < -4 ? BELGIUM.yellow : '#000';
+        if (inv.symbol === 'databricks') {
+          return '#FFFFFF';
         }
-        return localY < -4 ? US.white : '#000';
+        return localY < -2 ? '#3E2723' : '#5D4037';
       };
       const px = (dx, dy, pw, ph) => {
         ctx.fillStyle = ink(dy);
@@ -999,7 +1019,7 @@
     function drawInvader(inv, frame) {
       const { x, y, w, h } = inv;
       const anim = Math.floor(frame / 20) % 2;
-      drawInvaderFlag(inv);
+      drawInvaderSymbolBody(inv);
       drawInvaderFace(inv, anim);
       ctx.strokeStyle = INVADER_OUTLINE;
       ctx.lineWidth = 1;
@@ -1020,7 +1040,7 @@
 
     function bunkerPixelColor(row, totalRows) {
       const band = Math.min(2, Math.floor(row / (totalRows / 3)));
-      return [BELGIUM.black, BELGIUM.red, BELGIUM.yellow][band];
+      return ['#1b5e20', '#39ff14', '#2e7d32'][band];
     }
 
     function drawBunker(bunker) {
@@ -1129,7 +1149,7 @@
       ctx.font = '18px "Courier New", monospace';
       ctx.fillText('DEFEND EARTH FROM THE ALIEN HORDE', W/2, H/2 - 30);
       ctx.font = '15px "Courier New", monospace';
-      ctx.fillText('INVADERS: AUSTRIA  ·  BELGIUM  ·  USA  (' + GAME_VERSION + ')', W/2, H/2 + 2);
+      ctx.fillText('INVADERS: SNOWFLAKE  ·  DATABRICKS  ·  HAMBURGER  (' + GAME_VERSION + ')', W/2, H/2 + 2);
       ctx.font = '18px "Courier New", monospace';
       if (isTouchDevice) {
         ctx.fillText('◀ ▶ BUTTONS  —  MOVE SHIP', W/2, H/2 + 20);
@@ -1317,7 +1337,8 @@
             publishGameEvent('invader.killed', {
               invaderRow: inv.row,
               invaderCol: inv.col,
-              flag: inv.flag,
+              symbol: inv.symbol,
+              flag: inv.symbol,
               pointsAwarded: inv.type.points,
               position: { x: inv.x, y: inv.y },
               remainingInvaders: getAliveInvaders().length

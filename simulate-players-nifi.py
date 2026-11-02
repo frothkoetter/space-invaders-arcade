@@ -28,7 +28,7 @@ from dataclasses import dataclass, field
 from typing import Any
 from urllib import error, request
 
-GAME_VERSION = "flag-edition-v20-init-order-fix"
+GAME_VERSION = "arcade-v21-snow-dbx-burger"
 DEFAULT_NIFI_URL = (
     "http://projtriton.inbound.dfx.hahgzjod.a465-9q4k.cloudera.site:9088/space-invaders"
 )
@@ -319,7 +319,8 @@ def sim_invader_kill(session: GameSession) -> list[dict[str, Any]]:
         ("invader.killed", {
             "invaderRow": row,
             "invaderCol": col,
-            "flag": random.choice(("AT", "BE", "US")),
+            "symbol": random.choice(("snowflake", "databricks", "hamburger")),
+            "flag": random.choice(("snowflake", "databricks", "hamburger")),
             "pointsAwarded": pts,
             "position": {"x": random.randint(40, 760), "y": random.randint(80, 400)},
             "remainingInvaders": session.remaining_invaders,

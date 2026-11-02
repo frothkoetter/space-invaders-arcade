@@ -1,7 +1,7 @@
-# Space Invaders — Flag Edition
+# Space Invaders — Arcade Edition
 
 <p align="center">
-  <img src="docs/images/start-screen.png" alt="Space Invaders Flag Edition — start screen" width="720">
+  <img src="docs/images/start-screen.png" alt="Space Invaders Arcade Edition — start screen" width="720">
 </p>
 
 <p align="center">
@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  Invaders wear <strong>Austria</strong>, <strong>Belgium</strong>, and <strong>US</strong> flag pixels; you fire pixel-art <strong>french fries</strong>; they shoot <strong>ketchup</strong>. Green CRT vibes included.
+  Invaders are pixel <strong>snowflakes</strong>, <strong>Databricks</strong> bricks, and <strong>hamburgers</strong>; you fire pixel-art <strong>french fries</strong>; they shoot <strong>ketchup</strong>. Green CRT vibes included.
 </p>
 
 ---
@@ -44,7 +44,7 @@ Then open [http://localhost:8080/index.html](http://localhost:8080/index.html).
 
 Mac setup notes: [sync-local-mac.md](./sync-local-mac.md)
 
-**Build tag:** `flag-edition-v20-init-order-fix` (shown on the start screen).
+**Build tag:** `arcade-v21-snow-dbx-burger` (shown on the start screen).
 
 ---
 
