@@ -10,10 +10,16 @@ The game body is unchanged: flat snake_case fields and `data_json` (same as Avro
 
 **No preflight:** POST uses `Content-Type: text/plain;charset=UTF-8` with the same JSON string in the body. Cross-origin posts use `fetch` with `mode: no-cors` so the browser still delivers the request even when the response is opaque.
 
-Open (direct to projtriton):
+Open from **localhost** or a **hosted game URL** (no local server required if the HTML is already on HTTPS):
 
 ```text
-http://127.0.0.1:8080/index.html?nifi=1&events=1&nifi-url=http://projtriton.inbound.dfx.hahgzjod.a465-9q4k.cloudera.site:9088/space-invaders
+https://frothkoetter.github.io/space-invaders-arcade/index.html?nifi=1&events=1&nifi-mode=simple&nifi-url=http://projtriton.inbound.dfx.hahgzjod.a465-9q4k.cloudera.site:9088/space-invaders
+```
+
+Local dev equivalent:
+
+```text
+http://127.0.0.1:8080/index.html?nifi=1&events=1&nifi-mode=simple&nifi-url=http://projtriton.inbound.dfx.hahgzjod.a465-9q4k.cloudera.site:9088/space-invaders
 ```
 
 Optional explicit mode (stored in `localStorage` as `si-nifi-mode`):

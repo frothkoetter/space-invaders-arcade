@@ -101,24 +101,47 @@ Schema reference: [kafka-streaming-proposal.md](./kafka-streaming-proposal.md) (
 
 ## NiFi ListenHTTP export (primary)
 
-When NiFi mode is on, the game **POST**s JSON to your Apache NiFi 2 **ListenHTTP** URL (`Content-Type: application/json`).
+When NiFi mode is on, the game **POST**s JSON to your Apache NiFi 2 **ListenHTTP** URL. Default browser mode is **`simple`** (`Content-Type: text/plain` + JSON body, no CORS preflight) — see [nifi-browser-cors.md](./nifi-browser-cors.md).
 
 | Doc | Purpose |
 |-----|---------|
-| [enable-nifi-events.md](./enable-nifi-events.md) | Turn on `?nifi=1` and projtriton URL |
+| [enable-nifi-events.md](./enable-nifi-events.md) | Query params, bookmarks, localStorage |
 | [nifi-listenhttp-setup.md](./nifi-listenhttp-setup.md) | ListenHTTP, CORS, curl |
 | [nifi-browser-cors.md](./nifi-browser-cors.md) | Browser POST vs proxy |
 | [nifi-iceberg-ingest-flow.md](./nifi-iceberg-ingest-flow.md) | NiFi → Iceberg (CDP) |
 | [trino-iceberg-space-invaders.ddl](./trino-iceberg-space-invaders.ddl) | Trino DDL |
 | [hive-iceberg-space-invaders.ddl](./hive-iceberg-space-invaders.ddl) | Hive DDL samples |
 
-**localStorage keys:** `si-nifi`, `si-nifi-listen-url`, `si-events`, `si-player-name`
+### One-shot URL (no local `http.server`)
 
-Example local URL:
+Open the game from **any HTTPS/HTTP origin** (GitHub Pages, CDN, NiFi-served static files, etc.). Paste **one full URL** in the address bar — settings are saved to `localStorage` on first load.
+
+**Replace** `YOUR_GAME_ORIGIN/index.html` with where you host this repo (example below uses GitHub Pages for [space-invaders-arcade](https://github.com/frothkoetter/space-invaders-arcade) — enable **Pages → Deploy from branch `main` / root** if that URL is not live yet). **Replace** the `nifi-url` value with your ListenHTTP endpoint (projtriton example uses **http** on port **9088**, not https).
 
 ```text
-http://127.0.0.1:9998/space-invaders
+https://frothkoetter.github.io/space-invaders-arcade/index.html?nifi=1&events=1&nifi-mode=simple&nifi-url=http://projtriton.inbound.dfx.hahgzjod.a465-9q4k.cloudera.site:9088/space-invaders
 ```
+
+| Query param | Purpose |
+|-------------|---------|
+| `nifi=1` | Enable NiFi POST export (persisted as `si-nifi`) |
+| `events=1` | Log `[game-event]` JSON in DevTools (persisted as `si-events`) |
+| `nifi-url` | Full ListenHTTP URL (persisted as `si-nifi-listen-url`) |
+| `nifi-mode` | `simple` (default, cross-origin friendly) or `cors` (`application/json`, needs gateway CORS) |
+
+After the first visit you can open `https://YOUR_GAME_ORIGIN/index.html` only — NiFi settings remain until you clear site data.
+
+> **Do not use `file://`** (double-click `index.html`) for NiFi export: the page origin is null and POST behavior is unreliable. Use a hosted URL or a local server.
+
+**ListenHTTP ingest URL only** (for NiFi processor config or `curl`, not the game page):
+
+```text
+http://projtriton.inbound.dfx.hahgzjod.a465-9q4k.cloudera.site:9088/space-invaders
+```
+
+Local dev ListenHTTP default in the game: `http://127.0.0.1:9998/space-invaders`
+
+**localStorage keys:** `si-nifi`, `si-nifi-listen-url`, `si-nifi-mode`, `si-events`, `si-player-name`
 
 Example curl:
 
