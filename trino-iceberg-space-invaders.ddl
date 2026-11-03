@@ -4,12 +4,12 @@
 --
 -- Adjust catalog and schema names to your cluster:
 --   YOUR_CATALOG  → Trino iceberg catalog (often "iceberg")
---   YOUR_SCHEMA   → Hive/Iceberg namespace (example: arcade)
+--   YOUR_SCHEMA   → Hive/Iceberg namespace (example: space_invaders)
 --   YOUR_WAREHOUSE → s3a://... or hdfs://... (set on catalog / HMS, not in this DDL)
 
--- CREATE SCHEMA IF NOT EXISTS iceberg.arcade;
+-- CREATE SCHEMA IF NOT EXISTS iceberg.space_invaders;
 
-CREATE TABLE IF NOT EXISTS iceberg.arcade.space_invaders_events (
+CREATE TABLE IF NOT EXISTS iceberg.space_invaders.space_invaders_events (
     -- NiFi UpdateRecord / PutIcebergRecord column names (snake_case)
     event_id        VARCHAR,
     event_type      VARCHAR,
@@ -33,41 +33,43 @@ WITH (
     -- , partitioning = ARRAY['event_type', 'day(occurred_at)']
 );
 
-COMMENT ON TABLE iceberg.arcade.space_invaders_events IS
+COMMENT ON TABLE iceberg.space_invaders.space_invaders_events IS
     'Arcade Space Invaders publishGameEvent envelopes from NiFi ListenHTTP ingest';
 
-COMMENT ON COLUMN iceberg.arcade.space_invaders_events.event_id IS
+COMMENT ON COLUMN iceberg.space_invaders.space_invaders_events.event_id IS
     'Game JSON: eventId — NiFi source field eventId → event_id';
-COMMENT ON COLUMN iceberg.arcade.space_invaders_events.event_type IS
+COMMENT ON COLUMN iceberg.space_invaders.space_invaders_events.event_type IS
     'Game JSON: eventType — e.g. invader.killed, score.changed';
-COMMENT ON COLUMN iceberg.arcade.space_invaders_events.occurred_at IS
+COMMENT ON COLUMN iceberg.space_invaders.space_invaders_events.occurred_at IS
     'Game JSON: occurredAt (ISO-8601)';
-COMMENT ON COLUMN iceberg.arcade.space_invaders_events.session_id IS
+COMMENT ON COLUMN iceberg.space_invaders.space_invaders_events.session_id IS
     'Game JSON: sessionId';
-COMMENT ON COLUMN iceberg.arcade.space_invaders_events.player_id IS
+COMMENT ON COLUMN iceberg.space_invaders.space_invaders_events.player_id IS
     'Game JSON: playerId';
-COMMENT ON COLUMN iceberg.arcade.space_invaders_events.player_name IS
+COMMENT ON COLUMN iceberg.space_invaders.space_invaders_events.player_name IS
     'Game JSON: playerName';
-COMMENT ON COLUMN iceberg.arcade.space_invaders_events.game_version IS
+COMMENT ON COLUMN iceberg.space_invaders.space_invaders_events.game_version IS
     'Game JSON: gameVersion (build tag)';
-COMMENT ON COLUMN iceberg.arcade.space_invaders_events.level IS
+COMMENT ON COLUMN iceberg.space_invaders.space_invaders_events.level IS
     'Game JSON: level';
-COMMENT ON COLUMN iceberg.arcade.space_invaders_events.frame IS
+COMMENT ON COLUMN iceberg.space_invaders.space_invaders_events.frame IS
     'Game JSON: frame';
-COMMENT ON COLUMN iceberg.arcade.space_invaders_events.data_json IS
+COMMENT ON COLUMN iceberg.space_invaders.space_invaders_events.data_json IS
     'Game JSON: data object serialized to string; query with json_parse(data_json)';
 
 -- Example analytics
 -- SELECT event_type,
 --        count(*) AS events,
 --        approx_distinct(player_id) AS players
--- FROM iceberg.arcade.space_invaders_events
+-- FROM iceberg.space_invaders.space_invaders_events
 -- WHERE occurred_at >= current_date - interval '7' day
 -- GROUP BY 1
 -- ORDER BY events DESC;
 
--- Example: extract score from data payload
+-- Example: extract score from data payload (game field is newScore)
 -- SELECT event_id,
---        cast(json_extract(json_parse(data_json), '$.score') AS integer) AS score
--- FROM iceberg.arcade.space_invaders_events
+--        cast(json_extract(json_parse(data_json), '$.newScore') AS integer) AS score
+-- FROM iceberg.space_invaders.space_invaders_events
 -- WHERE event_type = 'score.changed';
+
+-- Flink SSB top-10 MV: see flink-top10player-mv.sql and top10-leaderboard.md

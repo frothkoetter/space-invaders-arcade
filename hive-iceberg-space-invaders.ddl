@@ -2,10 +2,10 @@
 -- Aligns with nifi-jsontree-schema-text.json / space-invaders-events.avsc (snake_case)
 -- NiFi PutIcebergRecord: set Namespace/Database + Table Name to match below
 
--- USE arcade;
--- CREATE DATABASE IF NOT EXISTS arcade;
+-- USE space_invaders;
+-- CREATE DATABASE IF NOT EXISTS space_invaders;
 
-CREATE TABLE IF NOT EXISTS arcade.space_invaders_events (
+CREATE TABLE IF NOT EXISTS space_invaders.space_invaders_events (
     event_id        STRING COMMENT 'Game eventId (UUID)',
     event_type      STRING COMMENT 'Game eventType e.g. invader.killed',
     occurred_at     TIMESTAMP COMMENT 'Game occurredAt (ISO-8601)',

@@ -24,7 +24,7 @@ Host: `projtriton.inbound.dfx.hahgzjod.a465-9q4k.cloudera.site` · Port: **9088*
 - [ ] **SplitJson** — `$.*` when body is batched array
 - [ ] **UpdateAttribute** — `mime.type=application/json` (if needed)
 - [ ] **UpdateRecord** — camelCase → snake_case; `data` → `data_json` string
-- [ ] **PutIcebergRecord** — namespace `arcade`, table `space_invaders_events`, PARQUET
+- [ ] **PutIcebergRecord** — namespace `space_invaders`, table `space_invaders_events`, PARQUET
 - [ ] **PutFile** (DLQ) — `/data/nifi-dlq/space-invaders/` or S3 prefix
 
 ## Relationships / error handling

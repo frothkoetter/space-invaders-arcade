@@ -12,7 +12,7 @@ Canonical operator reference for the **Arcade Space Invaders** ingest pipeline o
 
 ### Purpose
 
-Browser game clients call **`publishGameEvent`** in [`index.html`](./index.html), which **POST**s JSON event envelopes to NiFi **ListenHTTP**. NiFi validates and normalizes each event, then **appends** rows to Apache **Iceberg** table **`iceberg.arcade.space_invaders_events`**, queryable from **Trino**.
+Browser game clients call **`publishGameEvent`** in [`index.html`](./index.html), which **POST**s JSON event envelopes to NiFi **ListenHTTP**. NiFi validates and normalizes each event, then **appends** rows to Apache **Iceberg** table **`iceberg.space_invaders.space_invaders_events`**, queryable from **Trino**.
 
 ### Public ingest URL (Cloudera inbound)
 
@@ -42,8 +42,8 @@ Browser (publishGameEvent)
   → UpdateAttribute (mime.type)
   → UpdateRecord (camelCase → snake_case, data → data_json, ingest_ts)
   → PutIcebergRecord
-  → Iceberg: iceberg.arcade.space_invaders_events (PARQUET)
-  → Trino: SELECT … FROM iceberg.arcade.space_invaders_events
+  → Iceberg: iceberg.space_invaders.space_invaders_events (PARQUET)
+  → Trino: SELECT … FROM iceberg.space_invaders.space_invaders_events
 ```
 
 ### Game / curl JSON (snake_case — same as Hive DDL + Avro)
@@ -98,7 +98,7 @@ flowchart LR
   end
 
   subgraph sink["Iceberg"]
-    PIR[PutIcebergRecord<br/>arcade.space_invaders_events]
+    PIR[PutIcebergRecord<br/>space_invaders.space_invaders_events]
   end
 
   subgraph dlq["DLQ"]
@@ -164,7 +164,7 @@ flowchart LR
      └──────┬──────┘
             ▼
      ┌─────────────────┐
-     │ PutIcebergRecord│ → iceberg.arcade.space_invaders_events
+     │ PutIcebergRecord│ → iceberg.space_invaders.space_invaders_events
      └─────────────────┘
 ```
 
@@ -412,7 +412,7 @@ Remove or null out leftover camelCase fields if your writer schema is strict.
 | **Processor type** | `PutIcebergRecord` |
 | **Record Reader** | **`JsonTreeReader`** wired to **snake_case** schema **or** chain reader from **UpdateRecord** output (same **JsonRecordSetWriter** schema as [space-invaders-events.avsc](./space-invaders-events.avsc)) |
 | **Iceberg Catalog Service** | Enabled **`IcebergCatalogService`** |
-| **Namespace** | **`arcade`** |
+| **Namespace** | **`space_invaders`** |
 | **Table Name** | **`space_invaders_events`** |
 | **File Format** | **`PARQUET`** |
 | **Maximum File Size** | `128 MB` (tune) |
@@ -433,7 +433,7 @@ Create table first with [trino-iceberg-space-invaders.ddl](./trino-iceberg-space
 | **failure** | → **UpdateAttribute** (`dlq.reason` = `${puticeberg.failure.reason:append('…')}`) → DLQ |
 | **retry** | → **RetryFlowFile** (transient HMS/S3) → **PutIcebergRecord** |
 
-**Trino qualified name:** `iceberg.arcade.space_invaders_events`
+**Trino qualified name:** `iceberg.space_invaders.space_invaders_events`
 
 ---
 
@@ -506,7 +506,7 @@ DDL reference: [trino-iceberg-space-invaders.ddl](./trino-iceberg-space-invaders
 | Property | Value |
 |----------|--------|
 | Catalog | **`IcebergCatalogService`** → same HMS/REST as Trino `iceberg` catalog |
-| Namespace | **`arcade`** |
+| Namespace | **`space_invaders`** |
 | Table | **`space_invaders_events`** |
 | Format | **PARQUET** |
 | Reader / writer | Record reader must expose **snake_case** fields matching table |
@@ -635,13 +635,13 @@ Content-Type: application/json
 | Empty `data_json` | `data` not stringified | Map `/data` → `/data_json` with JSON stringify |
 | ListenHTTP no FlowFiles | Wrong port/path, processor stopped, inbound mismatch | Match **9088** + **`/space-invaders`**; start ListenHTTP last |
 | Browser POST blocked | CORS | Same-origin proxy or gateway CORS — [nifi-listenhttp-setup.md](./nifi-listenhttp-setup.md) |
-| Trino count zero | Wrong catalog/table, table not created | Run DDL; query `iceberg.arcade.space_invaders_events` |
+| Trino count zero | Wrong catalog/table, table not created | Run DDL; query `iceberg.space_invaders.space_invaders_events` |
 
 ### Post-deploy smoke
 
 1. **curl** single event (§13).
 2. NiFi **Summary** → FlowFiles sent/received incrementing.
-3. Trino: `SELECT count(*) FROM iceberg.arcade.space_invaders_events WHERE ingest_ts >= current_timestamp - interval '1' hour;`
+3. Trino: `SELECT count(*) FROM iceberg.space_invaders.space_invaders_events WHERE ingest_ts >= current_timestamp - interval '1' hour;`
 
 ---
 
@@ -704,7 +704,7 @@ Trino:
 
 ```sql
 SELECT event_type, count(*) AS n
-FROM iceberg.arcade.space_invaders_events
+FROM iceberg.space_invaders.space_invaders_events
 WHERE occurred_at >= current_timestamp - interval '1' hour
 GROUP BY 1;
 ```
@@ -754,5 +754,5 @@ failure / unmatched / parse errors
 | 3 | SplitJson | `$.*` per event in batch |
 | 4 | UpdateAttribute | `mime.type` |
 | 5 | UpdateRecord | snake_case, `data_json`, `ingest_ts` |
-| 6 | PutIcebergRecord | `arcade.space_invaders_events` |
+| 6 | PutIcebergRecord | `space_invaders.space_invaders_events` |
 | 7 | LogAttribute + PutFile/S3 | DLQ |

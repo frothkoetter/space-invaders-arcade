@@ -123,8 +123,10 @@ When NiFi mode is on, the game **POST**s JSON to your Apache NiFi 2 **ListenHTTP
 | [nifi-listenhttp-setup.md](./nifi-listenhttp-setup.md) | ListenHTTP, CORS, curl |
 | [nifi-browser-cors.md](./nifi-browser-cors.md) | Browser POST vs proxy |
 | [nifi-iceberg-ingest-flow.md](./nifi-iceberg-ingest-flow.md) | NiFi → Iceberg (CDP) |
-| [trino-iceberg-space-invaders.ddl](./trino-iceberg-space-invaders.ddl) | Trino DDL |
+| [trino-iceberg-space-invaders.ddl](./trino-iceberg-space-invaders.ddl) | Trino DDL (`iceberg.space_invaders`) |
 | [hive-iceberg-space-invaders.ddl](./hive-iceberg-space-invaders.ddl) | Hive DDL samples |
+| [flink-kafka-data-source.md](./flink-kafka-data-source.md) | SSB Kafka data source `local` |
+| [flink-top10player-mv.sql](./flink-top10player-mv.sql) | Flink SQL MV `top10player` |
 
 ### One-shot URL (no local `http.server`)
 

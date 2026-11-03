@@ -235,7 +235,7 @@ Alternatively keep **camelCase** in Iceberg and match Trino column names in DDL 
 |----------|--------|
 | **Record Reader** | `JsonTreeReader` (or writer from UpdateRecord chain) |
 | **Iceberg Catalog Service** | Your enabled `IcebergCatalogService` |
-| **Namespace** | `arcade` (Hive DB / Iceberg namespace) |
+| **Namespace** | `space_invaders` (Hive DB / Iceberg namespace) |
 | **Table Name** | `space_invaders_events` |
 | **File Format** | `PARQUET` |
 | **Maximum File Size** | e.g. `128 MB` |
@@ -289,7 +289,7 @@ Placeholders to replace in CM / Ambari / env config:
 - `YOUR_WAREHOUSE` — root warehouse path for Iceberg files
 - `YOUR_HMS_HOST` — Hive Metastore host for thrift URI
 
-After deploy, run the Trino DDL once, then smoke-test with curl (below) and `SELECT count(*) FROM iceberg.arcade.space_invaders_events`.
+After deploy, run the Trino DDL once, then smoke-test with curl (below) and `SELECT count(*) FROM iceberg.space_invaders.space_invaders_events`.
 
 ---
 
@@ -301,7 +301,7 @@ After deploy, run the Trino DDL once, then smoke-test with curl (below) and `SEL
 | 2 | **RouteOnAttribute** | POST + JSON only |
 | 3 | **SplitJson** | One FlowFile per event when body is array |
 | 4 | **UpdateRecord** | snake_case + `data_json`; optional `ingest_ts` |
-| 5 | **PutIcebergRecord** | Append to `arcade.space_invaders_events` |
+| 5 | **PutIcebergRecord** | Append to `space_invaders.space_invaders_events` |
 | 6 | **PutFile** (DLQ) | Invalid requests / write failures |
 
 Controller services: **SSL Context**, **JsonTreeReader**, **IcebergCatalogService** (+ **JsonRecordSetWriter** if used in UpdateRecord).
@@ -345,7 +345,7 @@ Trino check:
 
 ```sql
 SELECT event_type, count(*) AS n
-FROM iceberg.arcade.space_invaders_events
+FROM iceberg.space_invaders.space_invaders_events
 WHERE occurred_at >= current_timestamp - interval '1' hour
 GROUP BY 1;
 ```

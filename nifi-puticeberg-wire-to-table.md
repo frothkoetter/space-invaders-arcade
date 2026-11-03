@@ -120,7 +120,7 @@ Then **UpdateRecord** only adds `ingest_ts` if needed, or skip UpdateRecord fiel
 |----------|--------|
 | **Record Reader** | JsonTreeReader with **space-invaders-events.avsc** (snake_case), **or** reader that matches UpdateRecord output |
 | **Iceberg Catalog Service** | Enabled |
-| **Namespace / Database** | Your Hive DB (e.g. `default` or `arcade`) |
+| **Namespace / Database** | **`space_invaders`** (match [trino-iceberg-space-invaders.ddl](./trino-iceberg-space-invaders.ddl)) |
 | **Table Name** | **`space_invaders_events`** |
 | **Unmatched Field Behavior** | `Ignore Unmatched Fields` (after mapping) or `Fail` while debugging |
 

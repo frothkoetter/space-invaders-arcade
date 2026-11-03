@@ -2,7 +2,69 @@
 
 Live ranking UI: [top10-leaderboard.html](./top10-leaderboard.html)
 
-Data source: Flink SSB materialized view `top10player` on the trition-si gateway (1-minute windows, `player_rank`, `player_name`, `score`).
+Data source: Flink SSB materialized view **`top10player`** on the trition-si gateway — **1-hour sliding window**, **1-minute slide** (updates every minute using all `score.changed` events in the trailing hour).
+
+**Primary Flink source:** Kafka virtual table **`ssb`.`ssb_default`.`space_invaders_events`** (topic **`space_invaders_events`**, JSON).  
+**Iceberg landing zone (NiFi):** **`iceberg.space_invaders.space_invaders_events`** — [trino-iceberg-space-invaders.ddl](./trino-iceberg-space-invaders.ddl).
+
+## Kafka data source + table (SSB)
+
+1. **Kafka data source** **`local`** (brokers, SASL/SSL, PLAIN, default truststore) — **[flink-kafka-data-source.md](./flink-kafka-data-source.md)**  
+2. **Kafka table** **`space_invaders_events`** on cluster **`local`**, topic **`space_invaders_events`**, format **JSON**  
+3. **Materialized view** **`top10player`** — **[flink-top10player-mv.sql](./flink-top10player-mv.sql)**
+
+## Create the materialized view (Flink SQL)
+
+Full script: **[flink-top10player-mv.sql](./flink-top10player-mv.sql)** (Kafka table DDL + `top10player` MV).
+
+The MV uses a **HOP (sliding) window**: **1 hour** size, **1 minute** slide on **`eventTimestamp`**, max **`newScore`** from **`data_json`** on `score.changed` events.
+
+```sql
+CREATE MATERIALIZED VIEW IF NOT EXISTS top10player
+COMMENT 'Top 10 by max score — 1h sliding window, 1m slide'
+AS
+SELECT
+  CAST(window_start AS STRING)  AS window_start,
+  CAST(window_end AS STRING)    AS window_end,
+  CAST(player_rank AS INT)      AS player_rank,
+  player_id,
+  player_name,
+  score
+FROM (
+  SELECT
+    window_start,
+    window_end,
+    player_id,
+    player_name,
+    score,
+    ROW_NUMBER() OVER (
+      PARTITION BY window_start, window_end
+      ORDER BY score DESC, player_id
+    ) AS player_rank
+  FROM (
+    SELECT
+      window_start,
+      window_end,
+      player_id,
+      MAX(player_name) AS player_name,
+      MAX(CAST(JSON_VALUE(data_json, '$.newScore') AS INT)) AS score
+    FROM TABLE(
+      HOP(
+        TABLE `ssb`.`ssb_default`.`space_invaders_events`,
+        DESCRIPTOR(`eventTimestamp`),
+        INTERVAL '1' MINUTE,
+        INTERVAL '1' HOUR
+      )
+    )
+    WHERE event_type = 'score.changed'
+      AND JSON_VALUE(data_json, '$.newScore') IS NOT NULL
+    GROUP BY window_start, window_end, player_id
+  )
+)
+WHERE player_rank <= 10;
+```
+
+NiFi **PutIcebergRecord** namespace must be **`space_invaders`** if you also land events in Iceberg. For the leaderboard MV, ensure producers write **`score.changed`** records to Kafka topic **`space_invaders_events`** with **`data_json`** containing **`newScore`**. Wire the SSB MVE query id into [serve-with-nifi-proxy.py](./serve-with-nifi-proxy.py) / [top10-leaderboard.html](./top10-leaderboard.html) if your gateway URL differs.
 
 ## Run locally (recommended)
 
