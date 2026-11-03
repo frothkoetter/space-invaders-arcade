@@ -24,7 +24,7 @@ Host: `projtriton.inbound.dfx.hahgzjod.a465-9q4k.cloudera.site` · Port: **9088*
 - [ ] **SplitJson** — `$.*` when body is batched array
 - [ ] **UpdateAttribute** — `mime.type=application/json` (if needed)
 - [ ] **UpdateRecord** — camelCase → snake_case; `data` → `data_json` string
-- [ ] **PutIcebergRecord** — namespace `space_invaders`, table `space_invaders_events`, PARQUET
+- [ ] **PutIceberg** / **PutIcebergRecord** — namespace **`space_invaders`**, table **`space_invaders_events`**, PARQUET
 - [ ] **PutFile** (DLQ) — `/data/nifi-dlq/space-invaders/` or S3 prefix
 
 ## Relationships / error handling
@@ -40,9 +40,18 @@ Host: `projtriton.inbound.dfx.hahgzjod.a465-9q4k.cloudera.site` · Port: **9088*
 - [ ] curl smoke test (single object + array)
 - [ ] Game: `si-nifi-listen-url` set to **HTTP** URL above; CORS or proxy if browser cross-origin
 
+## Exported flow (proj_si)
+
+**Import:** [nifi-flows/proj_si-version-1.json](./nifi-flows/proj_si-version-1.json)  
+**Docs:** [nifi-flow-proj-si.md](./nifi-flow-proj-si.md)
+
+ListenHTTP → **MergeContent** → **PutIceberg** (`space_invaders` / `space_invaders_events`) and parallel **PublishKafka2RecordCDP** → topic `space_invaders_events`. Parameter context **`proj_si`**.
+
+Set **`cdp_workload_password`** and **`CDPEnvironment`** in NiFi after import (not stored in git).
+
 ## Export template (optional)
 
-When your NiFi UI supports export, save the process group as `space-invaders-ingest-iceberg.xml` and store outside git if it contains secrets. Re-import requires the same NAR versions (Iceberg bundle on NiFi 2).
+When your NiFi UI supports export, save updated versions alongside `proj_si-version-2.json`. Re-import requires the same NAR versions (Iceberg + CDF Kafka on NiFi 2).
 
 ## Version note
 

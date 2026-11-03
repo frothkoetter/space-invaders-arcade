@@ -4,6 +4,8 @@ End-to-end flow design for ingesting browser **ListenHTTP** JSON into an **Apach
 
 **Canonical full reference:** [nifi2-flow-full-description.md](./nifi2-flow-full-description.md) (processors, controller services, validation, operations).
 
+**Ready-made flow export:** [nifi-flow-proj-si.md](./nifi-flow-proj-si.md) + [nifi-flows/proj_si-version-1.json](./nifi-flows/proj_si-version-1.json) (ListenHTTP → PutIceberg **`space_invaders.space_invaders_events`** + Kafka **`space_invaders_events`**).
+
 **Primary ingest URL (Cloudera inbound):**
 
 ```text

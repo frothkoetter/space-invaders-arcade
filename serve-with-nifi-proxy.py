@@ -35,10 +35,17 @@ BIND_HOST = "127.0.0.1"
 BIND_PORT = 8080
 INGEST_PATH = "/space-invaders"
 SSB_PROXY_PATH = "/api/ssb/top10player"
+# Alias for SSB MV endpoint named "top10" (proj-si); see cdp-full-setup-proj-si.md
+SSB_PROXY_PATHS = frozenset(
+    {
+        SSB_PROXY_PATH.rstrip("/"),
+        "/api/ssb/top10",
+    }
+)
 DEFAULT_SSB_UPSTREAM = (
-    "https://trition-si-gateway.se-sandb.a465-9q4k.cloudera.site"
-    "/trition-si/cdp-proxy-api/ssb-mve-api/api/v1/query/5198/top10player"
-    "?key=14de1710-a15b-49ef-a088-83a9c43a631f"
+    "https://proj-si-gateway.se-sandb.a465-9q4k.cloudera.site"
+    "/proj-si/cdp-proxy-api/ssb-mve-api/api/v1/query/5195/top10"
+    "?key=57897915-994d-480f-b762-e4f986d38d27"
 )
 
 ROOT = Path(__file__).resolve().parent
@@ -189,7 +196,7 @@ class NifiProxyHandler(SimpleHTTPRequestHandler):
         if path in LEADERBOARD_URL_PATHS:
             self._serve_leaderboard()
             return
-        if path == SSB_PROXY_PATH.rstrip("/"):
+        if path in SSB_PROXY_PATHS:
             parsed = urlparse(self.path)
             query = parse_qs(parsed.query, keep_blank_values=True)
             if not self.ssb_user:
@@ -218,7 +225,7 @@ class NifiProxyHandler(SimpleHTTPRequestHandler):
 
     def do_OPTIONS(self) -> None:
         path = urlparse(self.path).path.rstrip("/")
-        if path in (INGEST_PATH.rstrip("/"), SSB_PROXY_PATH.rstrip("/")):
+        if path in (INGEST_PATH.rstrip("/"), *SSB_PROXY_PATHS):
             status, body, extra = cors_preflight_response()
             self.send_response(status)
             for k, v in extra:
@@ -278,7 +285,10 @@ def main() -> int:
     server = ThreadingHTTPServer((args.host, args.port), handler)
     print(f"Serving {ROOT} at http://{args.host}:{args.port}/")
     print(f"Proxy POST {INGEST_PATH} → {NifiProxyHandler.upstream_base}")
-    print(f"Proxy GET  {SSB_PROXY_PATH} → SSB (SSB_USER={'set' if NifiProxyHandler.ssb_user else 'MISSING'})")
+    print(
+        f"Proxy GET  {', '.join(sorted(SSB_PROXY_PATHS))} → SSB "
+        f"(SSB_USER={'set' if NifiProxyHandler.ssb_user else 'MISSING'})"
+    )
     print("Game URL (proxy ingest, CORS mode OK):")
     print(
         f"  http://{args.host}:{args.port}/index.html?nifi=1&events=1"

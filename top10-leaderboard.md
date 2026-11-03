@@ -89,7 +89,9 @@ http://127.0.0.1:8080/leaderboard
 
 If you get **404**, confirm `top10-leaderboard.html` is in the repo root next to `serve-with-nifi-proxy.py`, then restart the server.
 
-The page calls same-origin `GET /api/ssb/top10player?limit=100` (proxied with Basic auth).
+The page calls same-origin `GET /api/ssb/top10?limit=100` (proxied with Basic auth). Alias: `/api/ssb/top10player`.
+
+**proj-si MVE example:** `https://proj-si-gateway.se-sandb.a465-9q4k.cloudera.site/proj-si/cdp-proxy-api/ssb-mve-api/api/v1/query/5195/top10?key=…&limit=100` — see [cdp-full-setup-proj-si.md](./cdp-full-setup-proj-si.md).
 
 ## Direct mode (no proxy)
 

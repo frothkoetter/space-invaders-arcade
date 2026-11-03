@@ -124,7 +124,8 @@ WHERE player_rank <= 10;
 -- 0. Data Sources → Kafka data source "local" (flink-kafka-data-source.md)
 -- 1. Kafka table space_invaders_events (Step 1 UI or SQL)
 -- 2. CREATE MATERIALIZED VIEW top10player (Step 2)
--- 3. Start the MV; wire SSB MVE query id into top10-leaderboard.html / serve-with-nifi-proxy.py
+-- 3. In SSB UI, add Materialized View endpoint named top10 (API path /query/{id}/top10)
+-- 4. Wire MVE URL into top10-leaderboard.html / serve-with-nifi-proxy.py (SSB_UPSTREAM)
 --
 -- Sanity (latest sliding windows — up to ~60 overlapping 1h windows in the last hour):
 -- SELECT * FROM top10player ORDER BY window_end DESC, player_rank LIMIT 50;

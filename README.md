@@ -113,6 +113,12 @@ Schema reference: [kafka-streaming-proposal.md](./kafka-streaming-proposal.md) (
 
 ---
 
+## Full CDP stack (proj-si walkthrough)
+
+Step-by-step: Data Hub → CDW Iceberg DDL → CDF NiFi → game ingest → Flink SSB → leaderboard UI — **[cdp-full-setup-proj-si.md](./cdp-full-setup-proj-si.md)** (with screenshots).
+
+---
+
 ## NiFi ListenHTTP export (primary)
 
 When NiFi mode is on, the game **POST**s JSON to your Apache NiFi 2 **ListenHTTP** URL. Default browser mode is **`simple`** (`Content-Type: text/plain` + JSON body, no CORS preflight) — see [nifi-browser-cors.md](./nifi-browser-cors.md).
@@ -122,6 +128,7 @@ When NiFi mode is on, the game **POST**s JSON to your Apache NiFi 2 **ListenHTTP
 | [enable-nifi-events.md](./enable-nifi-events.md) | Query params, bookmarks, localStorage |
 | [nifi-listenhttp-setup.md](./nifi-listenhttp-setup.md) | ListenHTTP, CORS, curl |
 | [nifi-browser-cors.md](./nifi-browser-cors.md) | Browser POST vs proxy |
+| [nifi-flow-proj-si.md](./nifi-flow-proj-si.md) | Importable NiFi flow `proj_si` (Iceberg + Kafka) |
 | [nifi-iceberg-ingest-flow.md](./nifi-iceberg-ingest-flow.md) | NiFi → Iceberg (CDP) |
 | [trino-iceberg-space-invaders.ddl](./trino-iceberg-space-invaders.ddl) | Trino DDL (`iceberg.space_invaders`) |
 | [hive-iceberg-space-invaders.ddl](./hive-iceberg-space-invaders.ddl) | Hive DDL samples |
